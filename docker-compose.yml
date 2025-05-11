@@ -27,16 +27,18 @@ services:
   frontend-dev:
     build:
       context: .
-      dockerfile: frontend/DockerFile.backend
+      dockerfile: frontend/DockerFile.frontend
       target: dev
     volumes:
-      - ./frontend:app
+      - ./frontend:/app
     ports:
       - "3000:3000"
     container_name: frontend
     restart: always
     #variables
     #environment:
+    depends_on:
+      - backend-dev
 
 volumes:
   kaput-data:
