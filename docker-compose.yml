@@ -18,7 +18,7 @@ services:
     ports:
       - "5000:5000"
     container_name: backend
-
+    restart: always
     environment:
       - MONGO_URI=mongodb+srv://enejkr:root@cluster0.ksmlu26.mongodb.net/kaput?retryWrites=true&w=majority&appName=Cluster0
     depends_on:
