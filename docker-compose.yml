@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: kaputDB
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - kaput-data:/data/db
+
+  backend-dev:
+    build:
+      context: .
+      dockerfile: backend/DockerFile.backend
+      target: dev
+    volumes:
+      - ./backend:/app
+    ports:
+      - "5000:5000"
+    container_name: backend
+
+    environment:
+      - MONGO_URI=mongodb+srv://enejkr:root@cluster0.ksmlu26.mongodb.net/kaput?retryWrites=true&w=majority&appName=Cluster0
+    depends_on:
+      - db
+
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: frontend/DockerFile.backend
+      target: dev
+    volumes:
+      - ./frontend:app
+    ports:
+      - "3000:3000"
+    container_name: frontend
+    restart: always
+    #variables
+    #environment:
+
+volumes:
+  kaput-data:
