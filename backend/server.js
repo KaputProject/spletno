@@ -3,7 +3,7 @@ const cors = require('cors');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+const dotenv = require('dotenv').config();
 const jwt = require("jsonwebtoken");
 
 const app = express();

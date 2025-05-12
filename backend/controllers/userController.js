@@ -1,5 +1,6 @@
 const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 /**
  * userController.js
@@ -9,19 +10,53 @@ const bcrypt = require('bcryptjs');
 module.exports = {
 
     /**
-     * userController.list()
+     * userController.login()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
-    list: function (req, res) {
-        UserModel.find(function (err, users) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting user.',
-                    error: err
-                });
+    login: async (req, res) => {
+        try {
+            const { username, password } = req.body;
+
+            const user = await UserModel.findOne({ username });
+            if (!user) {
+                return res.status(401).json({ message: 'Invalid credentials' });
             }
 
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ message: 'Invalid credentials' });
+            }
+
+            const token = jwt.sign({username}, process.env.JWT_SECRET_TOKEN, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+            return res.json({
+                user: user,
+                token: token
+            });
+        } catch (err) {
+            console.log(err)
+            return res.status(500).json({ message: 'Server error', error: err });
+        }
+    },
+
+    /**
+     * userController.list()
+     */
+    list: async function (req, res) {
+        try {
+            // Returns the users without the password field
+            const users = await UserModel.find({}, '-password');
+
             return res.json(users);
-        });
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when getting users.',
+                error: err
+            });
+        }
     },
 
     /**
@@ -66,14 +101,10 @@ module.exports = {
                 dateOfBirth: req.body.dateOfBirth
             });
 
-            const savedUser = await user.save();
-
-            const userWithoutPassword = savedUser.toObject();
-            delete userWithoutPassword.password;
+            await user.save();
 
             return res.status(201).json({
                 "message": "User created successfully",
-                "user": userWithoutPassword
             });
         } catch (err) {
             return res.status(500).json({
