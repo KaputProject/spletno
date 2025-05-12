@@ -1,4 +1,5 @@
-var UserModel = require('../models/userModel.js');
+const UserModel = require('../models/userModel.js');
+const bcrypt = require('bcryptjs');
 
 /**
  * userController.js
@@ -49,68 +50,71 @@ module.exports = {
 
     /**
      * userController.create()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
-    create: function (req, res) {
-        var user = new UserModel({
-			username : req.body.username,
-            password : bcrypt.hashSync(req.body.password, 10),
-			name : req.body.name,
-			surname : req.body.surname,
-			email : req.body.email,
-			dateOfBirth : req.body.dateOfBirth
-        });
+    create: async function (req, res) {
+        try {
+            const user = new UserModel({
+                username: req.body.username,
+                password: bcrypt.hashSync(req.body.password, 10),
+                name: req.body.name,
+                surname: req.body.surname,
+                email: req.body.email,
+                dateOfBirth: req.body.dateOfBirth
+            });
 
-        user.save(function (err, user) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating user',
-                    error: err
-                });
-            }
+            const savedUser = await user.save();
 
-            return res.status(201).json(user);
-        });
+            const userWithoutPassword = savedUser.toObject();
+            delete userWithoutPassword.password;
+
+            return res.status(201).json({
+                "message": "User created successfully",
+                "user": userWithoutPassword
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when creating user',
+                error: err
+            });
+        }
     },
 
     /**
      * userController.update()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
-    update: function (req, res) {
-        var id = req.params.id;
-
-        UserModel.findOne({_id: id}, function (err, user) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting user',
-                    error: err
-                });
-            }
+    update: async function (req, res) {
+        try {
+            const id = req.params.id;
+            const user = await UserModel.findOne({ _id: id });
 
             if (!user) {
-                return res.status(404).json({
-                    message: 'No such user'
-                });
+                return res.status(404).json({ message: 'No such user' });
             }
 
-            user.username = req.body.username ? req.body.username : user.username;
-			user.name = req.body.name ? req.body.name : user.name;
-			user.surname = req.body.surname ? req.body.surname : user.surname;
-			user.email = req.body.email ? req.body.email : user.email;
-			user.accounts = req.body.accounts ? req.body.accounts : user.accounts;
-			user.address = req.body.address ? req.body.address : user.address;
-			user.dateOfBirth = req.body.dateOfBirth ? req.body.dateOfBirth : user.dateOfBirth;
-			
-            user.save(function (err, user) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when updating user.',
-                        error: err
-                    });
-                }
+            user.username = req.body.username || user.username;
+            user.name = req.body.name || user.name;
+            user.surname = req.body.surname || user.surname;
+            user.email = req.body.email || user.email;
+            user.accounts = req.body.accounts || user.accounts;
+            user.address = req.body.address || user.address;
+            user.dateOfBirth = req.body.dateOfBirth || user.dateOfBirth;
 
-                return res.json(user);
+            const updatedUser = await user.save();
+            return res.json(updatedUser);
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when updating user.',
+                error: err
             });
-        });
+        }
     },
 
     /**
