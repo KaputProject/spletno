@@ -6,11 +6,6 @@ var userSchema = new Schema({
     'name': String,
     'surname': String,
     'email': String,
-    'accounts': Array[{
-        type: Schema.Types.ObjectId, ref: 'account'
-    }], 'address': {
-        type: Schema.Types.ObjectId, ref: 'address'
-    }, 'dateOfBirth': Date
 });
 
 module.exports = mongoose.model('user', userSchema);
