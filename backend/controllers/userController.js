@@ -53,11 +53,10 @@ module.exports = {
     create: function (req, res) {
         var user = new UserModel({
 			username : req.body.username,
+            password : bcrypt.hashSync(req.body.password, 10),
 			name : req.body.name,
 			surname : req.body.surname,
 			email : req.body.email,
-			accounts : req.body.accounts,
-			address : req.body.address,
 			dateOfBirth : req.body.dateOfBirth
         });
 
