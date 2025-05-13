@@ -2,15 +2,23 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
-    'username': String,
+    'username': {
+        type: String,
+        index: true,
+        unique: true
+    },
+    'password': String,
     'name': String,
     'surname': String,
-    'email': String,
-    'accounts': Array[{
-        type: Schema.Types.ObjectId, ref: 'account'
-    }], 'address': {
-        type: Schema.Types.ObjectId, ref: 'address'
-    }, 'dateOfBirth': Date
+    'email': {
+        type: String,
+        index: true,
+        unique: true
+    },
+    'dateOfBirth' : {
+        type: Date,
+        default: Date.now()
+    },
 });
 
 module.exports = mongoose.model('user', userSchema);
