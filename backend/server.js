@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 5000;
 // Here you should require your routes
 const userRouter = require('./routes/userRoutes');
 
-// MongoDB Connection
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
@@ -30,8 +29,8 @@ app.use(session({
     resave: true,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: mongoDB, // Ensure this is set correctly
-        collectionName: 'sessions' // Optional: you can specify the collection name
+        mongoUrl: mongoDB,
+        collectionName: 'sessions'
     }),
 }));
 
