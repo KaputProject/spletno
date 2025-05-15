@@ -12,8 +12,7 @@ const PORT = process.env.PORT || 5000;
 // Here you should require your routes
 const userRouter = require('./routes/userRoutes');
 
-// MongoDB Connection
-const mongoDB = "mongodb://127.0.0.1/kaput";
+const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -29,7 +28,10 @@ app.use(session({
     secret: 'work hard',
     resave: true,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: mongoDB }),
+    store: MongoStore.create({
+        mongoUrl: mongoDB,
+        collectionName: 'sessions'
+    }),
 }));
 
 // Here you can add your routes
