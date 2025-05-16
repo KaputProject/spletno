@@ -69,6 +69,8 @@ module.exports = {
 
     /**
      * Delete an account
+     *
+     * TODO: Make sure all the related statements get deleted as well
      */
     remove: async function (req, res) {
         try {
