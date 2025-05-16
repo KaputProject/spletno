@@ -19,6 +19,17 @@ var userSchema = new Schema({
         type: Date,
         default: Date.now()
     },
+
+    'accounts': [{
+        type: Schema.Types.ObjectId,
+        ref: 'account'
+    }],
+
+    // Locations specific to the user
+    // 'locations': [{
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'location'
+    // }],
 });
 
 module.exports = mongoose.model('user', userSchema);

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const UserModel = require('../models/userModel');
 
 module.exports = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -6,9 +7,9 @@ module.exports = (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    jwt.verify(token, process.env.JWT_SECRET_TOKEN, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET_TOKEN, (err, userId) => {
         if (err) return res.sendStatus(403);
-        req.user = user;
+        req.user = UserModel.findById(userId, '-password');
 
         next();
     });
