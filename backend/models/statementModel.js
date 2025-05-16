@@ -53,3 +53,6 @@ var statementSchema = new Schema({
 });
 
 module.exports = mongoose.model('statement', statementSchema);
+
+//TODO: Make sure the statement is deleted from an account on delete
+//TODO: Make sure all the statements transactions are deleted on delete

@@ -1,30 +1,36 @@
-var express = require('express');
-var router = express.Router();
-var statementController = require('../controllers/statementController.js');
+const express = require('express');
+const router = express.Router();
+const statementController = require('../controllers/statementController.js');
+const authenticate = require('../middleware/authenticate.js');
 
 /*
  * GET
  */
-router.get('/', statementController.list);
+router.get('/', authenticate, statementController.list);
 
 /*
  * GET
  */
-router.get('/:id', statementController.show);
+router.get('/:id', authenticate, statementController.show);
 
 /*
  * POST
  */
-router.post('/', statementController.create);
+router.post('/', authenticate, statementController.create);
+
+/*
+ * POST
+ */
+router.post('/parse', authenticate, statementController.parse);
 
 /*
  * PUT
  */
-router.put('/:id', statementController.update);
+router.put('/:id', authenticate, statementController.update);
 
 /*
  * DELETE
  */
-router.delete('/:id', statementController.remove);
+router.delete('/:id', authenticate, statementController.remove);
 
 module.exports = router;

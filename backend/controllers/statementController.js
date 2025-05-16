@@ -1,8 +1,60 @@
 const StatementModel = require('../models/statementModel');
-// Assume req.user is available via JWT middleware
-const { isOwner } = require('../utils/authorize'); // A helper to compare user ownership
+const AccountModel = require('../models/accountModel');
+const { isOwner } = require('../utils/authorize');
+const moment = require('moment');
 
 module.exports = {
+
+    /**
+     * statementController.parse()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    parse: async (req, res) => {
+        try {
+            const account = await AccountModel.findOne({ iban: req.body.iban });
+            if (!account) {
+                return res.status(404).json({ message: `Account with IBAN: "${req.body.iban}" not found, please create it first.`});
+            }
+
+            const startDate = moment(req.body.startDate, 'DD.MM.YYYY').toDate();
+            const endDate = moment(req.body.endDate, 'DD.MM.YYYY').toDate();
+
+            const statement = new StatementModel({
+                user: req.user._id,
+                account: account._id,
+                transactions: [],
+                startDate: startDate,
+                endDate: endDate,
+                inflow: req.body.inflow || 0,
+                outflow: req.body.outflow || 0,
+                startBalance: req.body.startBalance || 0,
+                endBalance: req.body.endBalance || 0,
+                month: endDate.getMonth() + 1,
+                year: endDate.getFullYear()
+            });
+
+            const saved = await statement.save();
+
+            account.statements.push(saved._id);
+            await account.save()
+
+            res.status(201).json({
+                message: 'Statement parsed successfully',
+                statement: saved
+            });
+
+        } catch (err) {
+            console.error('Error parsing statement:', err);
+            res.status(500).json({
+                message: 'Error when parsing statement',
+                error: err
+            });
+        }
+    },
+
     /**
      * statementController.list()
      *
@@ -21,6 +73,7 @@ module.exports = {
                 statements: statements
             });
         } catch (err) {
+            console.error('Error retrieving statements:', err);
             res.status(500).json({
                 message: 'Error when getting statements',
                 error: err
@@ -55,6 +108,7 @@ module.exports = {
                 statement: statement
             });
         } catch (err) {
+            console.error('Error retrieving statement:', err);
             res.status(500).json({
                 message: 'Error when getting statement',
                 error: err
@@ -91,6 +145,7 @@ module.exports = {
                 statement: saved
             });
         } catch (err) {
+            console.error('Error creating statement:', err);
             res.status(500).json({
                 message: 'Error when creating statement',
                 error: err
@@ -133,6 +188,7 @@ module.exports = {
                 statement: updated
             });
         } catch (err) {
+            console.log('Error updating statement:', err);
             res.status(500).json({
                 message: 'Error when updating statement',
                 error: err
@@ -161,6 +217,7 @@ module.exports = {
             await statement.deleteOne();
             res.status(204).send();
         } catch (err) {
+            console.error('Error deleting statement:', err);
             res.status(500).json({
                 message: 'Error when deleting statement',
                 error: err
