@@ -7,8 +7,13 @@ const { isOwner } = require('../utils/authorize.js');
  * @description :: Server-side logic for managing locations.
  */
 module.exports = {
+
     /**
-     * List all locations for the authenticated user
+     * locationController.list()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<void>}
      */
     list: async (req, res) => {
         try {
@@ -27,7 +32,11 @@ module.exports = {
     },
 
     /**
-     * Show a single location by ID
+     * locationController.show()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     show: async (req, res) => {
         try {
@@ -51,7 +60,11 @@ module.exports = {
     },
 
     /**
-     * Create a new location
+     * locationController.create()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<void>}
      */
     create: async (req, res) => {
         try {
@@ -72,6 +85,10 @@ module.exports = {
 
             const savedLocation = await location.save();
 
+            // Here the location is saved to the users table of locations
+            req.user.locations.push(savedLocation._id);
+            await req.user.save();
+
             res.status(201).json({
                 message: 'Location created successfully',
                 location: savedLocation
@@ -85,7 +102,11 @@ module.exports = {
     },
 
     /**
-     * Update a location
+     * locationController.update()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     update: async (req, res) => {
         try {
@@ -122,7 +143,11 @@ module.exports = {
     },
 
     /**
-     * Remove a location
+     * locationController.remove()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     remove: async (req, res) => {
         try {
@@ -136,7 +161,7 @@ module.exports = {
                 return res.status(403).json({ message: 'Unauthorized access' });
             }
 
-            await LocationModel.findByIdAndDelete(req.params.id);
+            await location.deleteOne();
 
             res.status(204).json();
         } catch (err) {

@@ -1,6 +1,7 @@
 const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const {isOwner} = require("../utils/authorize");
 
 /**
  * userController.js
@@ -155,19 +156,31 @@ module.exports = {
 
     /**
      * userController.remove()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
-    remove: function (req, res) {
-        var id = req.params.id;
+    remove: async function (req, res) {
+        try {
+            const user = await UserModel.findById(req.params.id);
 
-        UserModel.findByIdAndRemove(id, function (err, user) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when deleting the user.',
-                    error: err
-                });
+            if (!user) {
+                return res.status(404).json({ message: 'No such user' });
             }
 
-            return res.status(204).json();
-        });
+            if (!isOwner(user, req.user)) {
+                return res.status(403).json({ message: 'Forbidden: No no no no no' });
+            }
+
+            await user.deleteOne();
+
+            return res.status(204).send();
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when deleting a user.',
+                error: err
+            });
+        }
     }
 };

@@ -13,8 +13,7 @@ var locationSchema = new Schema({
 	},
 	'identifier' : {
 		type: String,
-		index: true,
-		unique: true,
+		index: true
 	},
 	'description' : {
 		type: String,
@@ -43,3 +42,6 @@ var locationSchema = new Schema({
 });
 
 module.exports = mongoose.model('location', locationSchema);
+
+// TODO: Make sure the location is automatically deleted from the users table
+// TODO: Make sure the location is deleted if its user is (to v user modelu nardis)
