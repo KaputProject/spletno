@@ -32,10 +32,10 @@ var userSchema = new Schema({
     }],
 
     // Locations specific to the user
-    // 'locations': [{
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'location'
-    // }],
+    'locations': [{
+        type: Schema.Types.ObjectId,
+        ref: 'location'
+    }],
 });
 
 module.exports = mongoose.model('user', userSchema);
