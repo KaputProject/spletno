@@ -55,7 +55,10 @@ module.exports = {
 
             const updatedAccount = await account.save();
 
-            res.json(updatedAccount);
+            res.json({
+                message: 'Account updated successfully',
+                account: updatedAccount
+            });
         } catch (err) {
             res.status(500).json({
                 message: 'Error when updating account.',
