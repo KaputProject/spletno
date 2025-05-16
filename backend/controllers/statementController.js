@@ -4,7 +4,11 @@ const { isOwner } = require('../utils/authorize'); // A helper to compare user o
 
 module.exports = {
     /**
-     * List all statements belonging to the logged-in user
+     * statementController.list()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<void>}
      */
     list: async (req, res) => {
         try {
@@ -25,7 +29,11 @@ module.exports = {
     },
 
     /**
-     * Show a single statement by ID
+     * statementController.show()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     show: async (req, res) => {
         try {
@@ -55,7 +63,11 @@ module.exports = {
     },
 
     /**
-     * Create a new statement (automatically associate with logged-in user)
+     * statementController.create()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<void>}
      */
     create: async (req, res) => {
         try {
@@ -87,7 +99,11 @@ module.exports = {
     },
 
     /**
-     * Update a statement (only if user owns it)
+     * statementController.update()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     update: async (req, res) => {
         try {
@@ -125,7 +141,11 @@ module.exports = {
     },
 
     /**
-     * Delete a statement (only if user owns it)
+     * statementController.remove()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
      */
     remove: async (req, res) => {
         try {
