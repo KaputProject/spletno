@@ -102,6 +102,7 @@ module.exports = {
                 name: req.body.name,
                 surname: req.body.surname,
                 email: req.body.email,
+                identifier: req.body.identifier,
                 dateOfBirth: req.body.dateOfBirth
             });
 
@@ -138,7 +139,7 @@ module.exports = {
             user.name = req.body.name || user.name;
             user.surname = req.body.surname || user.surname;
             user.email = req.body.email || user.email;
-            user.accounts = req.body.accounts || user.accounts;
+            user.identifier = req.body.identifier || user.identifier;
             user.address = req.body.address || user.address;
             user.dateOfBirth = req.body.dateOfBirth || user.dateOfBirth;
 

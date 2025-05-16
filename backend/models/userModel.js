@@ -10,6 +10,12 @@ var userSchema = new Schema({
     'password': String,
     'name': String,
     'surname': String,
+
+    'identifier': {
+        type: String,
+        index: true,
+    },
+
     'email': {
         type: String,
         index: true,
