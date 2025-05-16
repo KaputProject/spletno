@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var userController = require('../controllers/userController.js');
-const authenticate = require('../middlewares/authenticate.js');
+const authenticate = require('../middleware/authenticate.js');
 
 /*
  * GET
