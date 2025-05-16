@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 // Here you should require your routes
 const userRouter = require('./routes/userRoutes');
+const accountRouter = require('./routes/accountRoutes');
 
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
@@ -36,6 +37,7 @@ app.use(session({
 
 // Here you can add your routes
 app.use('/users', userRouter);
+app.use('/accounts', accountRouter);
 
 // Start Server
 app.listen(PORT, () => {
