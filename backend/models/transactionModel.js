@@ -2,21 +2,49 @@ var mongoose = require('mongoose');
 var Schema   = mongoose.Schema;
 
 var transactionSchema = new Schema({
-	'dateTime' : Date,
-	'reference' : String,
-	'otherPartyString' : String,
-	'otherParty' : {
-	 	type: Schema.Types.ObjectId,
-	 	ref: 'party'
+	'user' : {
+		type: Schema.Types.ObjectId,
+		ref: 'user',
+		index: true
 	},
-	'description' : String,
-	'category' : {
-	 	type: Schema.Types.ObjectId,
-	 	ref: 'category'
+
+	'datetime' : {
+		type: Date,
+		default: Date.now()
 	},
-	'outgoing' : Boolean,
-	'amount' : Number,
-	'balance' : Number
+	'reference' : {
+		type: Number,
+	},
+
+	'partner_original' : {
+		type: String,
+	},
+	'description' : {
+		type: String,
+	},
+
+	'amount' : {
+		type: Number,
+		default: 0
+	},
+	'balanceAfter' : {
+		type: Number,
+		default: 0
+	},
+	'outgoing' : {
+		type: Boolean,
+		default: true
+	},
+
+	'known_partner' : {
+		type: Boolean,
+		default: false
+	},
+	'partner_parsed' : {
+		type: Schema.Types.ObjectId,
+		ref: 'partner',
+		index: true
+	}
 });
 
 module.exports = mongoose.model('transaction', transactionSchema);
