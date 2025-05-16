@@ -2,18 +2,54 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var statementSchema = new Schema({
+    'user': {
+        type: Schema.Types.ObjectId,
+        ref: 'user'
+    },
     'account': {
-        type: Schema.Types.ObjectId, ref: 'account'
+        type: Schema.Types.ObjectId,
+        ref: 'account'
     },
-    'description': String,
-    'totalIn': Number,
-    'totalOut': Number,
-    'balanceBefore': String,
-    'balanceAfter': String,
-    'stats': {
-        type: Schema.Types.ObjectId, ref: 'stats'
+
+    'transactions': [{
+        type: Schema.Types.ObjectId,
+        ref: 'transaction'
+    }],
+
+    'startDate': {
+        type: Date,
+        default: Date.now()
     },
-    'dateTime': Date
+    'endDate': {
+        type: Date,
+        default: Date.now()
+    },
+
+    'inflow': {
+        type: Number,
+        default: 0
+    },
+    'outflow': {
+        type: Number,
+        default: 0
+    },
+    'startBalance': {
+        type: Number,
+        default: 0
+    },
+    'endBalance': {
+        type: Number,
+        default: 0
+    },
+
+    'month': {
+        type: Number,
+        default: new Date().getMonth()
+    },
+    'year': {
+        type: Number,
+        default: new Date().getFullYear()
+    }
 });
 
 module.exports = mongoose.model('statement', statementSchema);

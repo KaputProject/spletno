@@ -1,5 +1,5 @@
 const AccountModel = require('../models/accountModel.js');
-const {isOwner} = require("../helpers/authorize");
+const {isOwner} = require("../utils/authorize");
 
 /**
  * accountController.js
