@@ -1,15 +1,14 @@
-const LocationModel = require('../models/locationModel.js');
+const LocationModel = require('../models/partnerModel.js');
 const { isOwner } = require('../utils/authorize.js');
 
 /**
- * locationController.js
+ * partnerController.js
  *
  * @description :: Server-side logic for managing locations.
  */
 module.exports = {
-
     /**
-     * locationController.list()
+     * partnerController.list()
      *
      * @param req
      * @param res
@@ -32,7 +31,7 @@ module.exports = {
     },
 
     /**
-     * locationController.show()
+     * partnerController.show()
      *
      * @param req
      * @param res
@@ -60,7 +59,7 @@ module.exports = {
     },
 
     /**
-     * locationController.create()
+     * partnerController.create()
      *
      * @param req
      * @param res
@@ -102,7 +101,7 @@ module.exports = {
     },
 
     /**
-     * locationController.update()
+     * partnerController.update()
      *
      * @param req
      * @param res
@@ -143,7 +142,7 @@ module.exports = {
     },
 
     /**
-     * locationController.remove()
+     * partnerController.remove()
      *
      * @param req
      * @param res

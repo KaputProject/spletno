@@ -1,7 +1,73 @@
 const TransactionModel = require('../models/transactionModel');
+const StatementModel = require('../models/statementModel');
+const PartnerModel = require('../models/partnerModel');
+
 const { isOwner } = require('../utils/authorize');
+const moment = require("moment/moment");
 
 module.exports = {
+
+    /**
+     * transactionController.parse()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    parse: async function (req, res) {
+        try {
+            const date = moment(req.body.date, 'DD.MM.YYYY').toDate();
+            const statement = await StatementModel.findById( req.body.statementId );
+
+            if (!statement) {
+                return res.status(404).json({
+                    message: `Account with ID: "${req.body.iban}" not found, please create it first.`
+                });
+            }
+
+            if (!isOwner(statement, req.user)) {
+                return res.status(403).json({
+                    message: 'Forbidden: Not your statement'
+                });
+            }
+
+            var transaction = new TransactionModel({
+                user: req.user._id,
+                statement: statement._id,
+                datetime: date,
+                reference: req.body.reference,
+                partner_original: req.body.partner,
+                description: req.body.description,
+                change: req.body.change,
+                balanceAfter: req.body.balance,
+                outgoing: req.body.outgoing,
+            });
+
+            // Looks for a partner with the matching identifier AND owned by this user
+            const partner = await PartnerModel.findOne({
+                identifier: req.body.partner,
+                user: req.user._id
+            });
+
+            if (partner) {
+                transaction.known_partner = true;
+                transaction.partner_parsed = partner._id;
+            }
+
+            const savedTransaction = await transaction.save();
+
+            return res.json({
+                message: 'Transaction parsed successfully',
+                transaction: savedTransaction
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when parsing transaction.',
+                error: err
+            });
+        }
+    },
+
     /**
      * transactionController.list()
      *
@@ -72,8 +138,8 @@ module.exports = {
             reference: req.body.reference,
             partner_original: req.body.partner_original,
             description: req.body.description,
-            amount: req.body.amount,
-            balanceAfter: req.body.balanceAfter,
+            change: req.body.change,
+            balanceAfter: req.body.balance,
             outgoing: req.body.outgoing,
             known_partner: req.body.known_partner,
             partner_parsed: req.body.partner_parsed
@@ -153,6 +219,7 @@ module.exports = {
             }
 
             await transaction.deleteOne();
+
             return res.status(204).send();
         } catch (err) {
             return res.status(500).json({

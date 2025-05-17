@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const locationController = require('../controllers/locationController.js');
+const locationController = require('../controllers/partnerController.js');
 const authenticate = require('../middleware/authenticate.js');
 
 /*

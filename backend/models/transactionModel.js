@@ -1,46 +1,51 @@
-var mongoose = require('mongoose');
-var Schema   = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-var transactionSchema = new Schema({
-	'user' : {
+const transactionSchema = new Schema({
+	'user': {
 		type: Schema.Types.ObjectId,
 		ref: 'user',
 		index: true
 	},
+	'statement': {
+		type: Schema.Types.ObjectId,
+		ref: 'statement',
+		index: true
+	},
 
-	'datetime' : {
+	'datetime': {
 		type: Date,
 		default: Date.now()
 	},
-	'reference' : {
+	'reference': {
 		type: Number,
 	},
 
-	'partner_original' : {
+	'partner_original': {
 		type: String,
 	},
-	'description' : {
+	'description': {
 		type: String,
 	},
 
-	'amount' : {
+	'change': {
 		type: Number,
 		default: 0
 	},
-	'balanceAfter' : {
+	'balanceAfter': {
 		type: Number,
 		default: 0
 	},
-	'outgoing' : {
+	'outgoing': {
 		type: Boolean,
 		default: true
 	},
 
-	'known_partner' : {
+	'known_partner': {
 		type: Boolean,
 		default: false
 	},
-	'partner_parsed' : {
+	'partner_parsed': {
 		type: Schema.Types.ObjectId,
 		ref: 'partner',
 		index: true

@@ -31,10 +31,10 @@ var userSchema = new Schema({
         ref: 'account'
     }],
 
-    // Locations specific to the user
-    'locations': [{
+    // Partners specific to the user
+    'partners': [{
         type: Schema.Types.ObjectId,
-        ref: 'location'
+        ref: 'partner'
     }],
 });
 
