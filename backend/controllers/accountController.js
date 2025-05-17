@@ -1,4 +1,5 @@
-var AccountModel = require('../models/accountModel.js');
+const AccountModel = require('../models/accountModel.js');
+const {isOwner} = require("../utils/authorize");
 
 /**
  * accountController.js
@@ -8,121 +9,91 @@ var AccountModel = require('../models/accountModel.js');
 module.exports = {
 
     /**
-     * accountController.list()
+     * Create new account
      */
-    list: function (req, res) {
-        AccountModel.find(function (err, accounts) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting account.',
-                    error: err
-                });
-            }
-
-            return res.json(accounts);
-        });
-    },
-
-    /**
-     * accountController.show()
-     */
-    show: function (req, res) {
-        var id = req.params.id;
-
-        AccountModel.findOne({_id: id}, function (err, account) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting account.',
-                    error: err
-                });
-            }
-
-            if (!account) {
-                return res.status(404).json({
-                    message: 'No such account'
-                });
-            }
-
-            return res.json(account);
-        });
-    },
-
-    /**
-     * accountController.create()
-     */
-    create: function (req, res) {
-        var account = new AccountModel({
-			iban : req.body.iban,
-			balance : req.body.balance,
-			statements : req.body.statements,
-			stats : req.body.stats
-        });
-
-        account.save(function (err, account) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating account',
-                    error: err
-                });
-            }
-
-            return res.status(201).json(account);
-        });
-    },
-
-    /**
-     * accountController.update()
-     */
-    update: function (req, res) {
-        var id = req.params.id;
-
-        AccountModel.findOne({_id: id}, function (err, account) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting account',
-                    error: err
-                });
-            }
-
-            if (!account) {
-                return res.status(404).json({
-                    message: 'No such account'
-                });
-            }
-
-            account.iban = req.body.iban ? req.body.iban : account.iban;
-			account.balance = req.body.balance ? req.body.balance : account.balance;
-			account.statements = req.body.statements ? req.body.statements : account.statements;
-			account.stats = req.body.stats ? req.body.stats : account.stats;
-			
-            account.save(function (err, account) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when updating account.',
-                        error: err
-                    });
-                }
-
-                return res.json(account);
+    create: async function (req, res) {
+        try {
+            const account = new AccountModel({
+                user: req.user._id,
+                iban: req.body.iban,
+                currency: req.body.currency,
+                balance: req.body.balance,
+                statements: [],
             });
-        });
+
+            const savedAccount = await account.save();
+            res.status(201).json({
+                message: 'Account created successfully',
+                account: savedAccount
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when creating account',
+                error: err
+            });
+        }
     },
 
     /**
-     * accountController.remove()
+     * Update an existing account
      */
-    remove: function (req, res) {
-        var id = req.params.id;
+    update: async function (req, res) {
+        try {
+            const account = await AccountModel.findById(req.params.id);
 
-        AccountModel.findByIdAndRemove(id, function (err, account) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when deleting the account.',
-                    error: err
-                });
+            if (!account) {
+                return res.status(404).json({ message: 'No such account found' });
             }
 
-            return res.status(204).json();
-        });
+            if (!isOwner(account, req.user)) {
+                return res.status(403).json({ message: 'Forbidden: Not the account owner' });
+            }
+
+            account.iban = req.body.iban ?? account.iban;
+            account.currency = req.body.currency ?? account.currency;
+            account.balance = req.body.balance ?? account.balance;
+
+            const updatedAccount = await account.save();
+
+            res.json({
+                message: 'Account updated successfully',
+                account: updatedAccount
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when updating account.',
+                error: err
+            });
+        }
+    },
+
+    /**
+     * Delete an account
+     *
+     * TODO: Make sure all the related statements get deleted as well
+     */
+    remove: async function (req, res) {
+        try {
+            const account = await AccountModel.findById(req.params.id);
+
+            if (!account) {
+                return res.status(404).json({ message: 'No such account found' });
+            }
+
+            if (!isOwner(account, req.user)) {
+                return res.status(403).json({ message: 'Forbidden: Not the account owner' });
+            }
+
+            await account.deleteOne();
+
+            res.status(200).send({
+                message: 'Account deleted successfully'
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when deleting the account.',
+                error: err
+            });
+        }
     }
 };
