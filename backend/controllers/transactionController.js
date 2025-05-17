@@ -71,6 +71,8 @@ module.exports = {
                 transaction.partner_parsed = partner._id;
             }
 
+            // TODO: Modify the partners total_spent and total_gained accordingly
+
             const savedTransaction = await transaction.save();
 
             statement.transactions.push(savedTransaction._id);
