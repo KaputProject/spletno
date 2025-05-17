@@ -1,4 +1,4 @@
-const LocationModel = require('../models/partnerModel.js');
+const PartnerModel = require('../models/partnerModel.js');
 const { isOwner } = require('../utils/authorize.js');
 
 /**
@@ -16,15 +16,15 @@ module.exports = {
      */
     list: async (req, res) => {
         try {
-            const locations = await LocationModel.find({ user: req.user._id }).populate('user');
+            const partners = await PartnerModel.find({ user: req.user._id }).populate('user');
 
             res.json({
-                message: 'User locations retrieved successfully',
-                locations
+                message: 'User partners retrieved successfully',
+                partners
             });
         } catch (err) {
             res.status(500).json({
-                message: 'Error when getting user locations.',
+                message: 'Error when getting user partners.',
                 error: err
             });
         }
@@ -39,20 +39,20 @@ module.exports = {
      */
     show: async (req, res) => {
         try {
-            const location = await LocationModel.findById(req.params.id);
+            const partner = await PartnerModel.findById(req.params.id);
 
-            if (!location) {
-                return res.status(404).json({ message: 'No such location' });
+            if (!partner) {
+                return res.status(404).json({ message: 'No such partner' });
             }
 
-            if (!isOwner(location, req.user)) {
+            if (!isOwner(partner, req.user)) {
                 return res.status(403).json({ message: 'Unauthorized access' });
             }
 
-            res.json(location);
+            res.json(partner);
         } catch (err) {
             res.status(500).json({
-                message: 'Error when getting location.',
+                message: 'Error when getting partner.',
                 error: err
             });
         }
@@ -67,7 +67,7 @@ module.exports = {
      */
     create: async (req, res) => {
         try {
-            const location = new LocationModel({
+            const partner = new PartnerModel({
                 user: req.user._id,
                 name: req.body.name,
                 identifier: req.body.identifier,
@@ -79,22 +79,22 @@ module.exports = {
 
                 // TODO: Make a default icon
                 icon: "default.png",
-                types: req.body.types
+                types: req.body.types || []
             });
 
-            const savedLocation = await location.save();
+            const savedPartner = await partner.save();
 
-            // Here the location is saved to the users table of locations
-            req.user.locations.push(savedLocation._id);
+            // Here the partner is saved to the users table of partners
+            req.user.partners.push(savedPartner._id);
             await req.user.save();
 
             res.status(201).json({
-                message: 'Location created successfully',
-                location: savedLocation
+                message: 'Partner created successfully',
+                partner: savedPartner
             });
         } catch (err) {
             res.status(500).json({
-                message: 'Error when creating location.',
+                message: 'Error when creating partner.',
                 error: err
             });
         }
@@ -109,33 +109,33 @@ module.exports = {
      */
     update: async (req, res) => {
         try {
-            const location = await LocationModel.findById(req.params.id);
+            const partner = await PartnerModel.findById(req.params.id);
 
-            if (!location) {
-                return res.status(404).json({ message: 'No such location' });
+            if (!partner) {
+                return res.status(404).json({ message: 'No such partner' });
             }
 
-            if (!isOwner(location, req.user)) {
+            if (!isOwner(partner, req.user)) {
                 return res.status(403).json({ message: 'Unauthorized access' });
             }
 
-            location.name = req.body.name ?? location.name;
-            location.identifier = req.body.identifier ?? location.identifier;
-            location.description = req.body.description ?? location.description;
-            location.address = req.body.address ?? location.address;
-            location.lat = req.body.lat ?? location.lat;
-            location.lng = req.body.lng ?? location.lng;
-            location.types = req.body.types ?? location.types;
+            partner.name = req.body.name ?? partner.name;
+            partner.identifier = req.body.identifier ?? partner.identifier;
+            partner.description = req.body.description ?? partner.description;
+            partner.address = req.body.address ?? partner.address;
+            partner.lat = req.body.lat ?? partner.lat;
+            partner.lng = req.body.lng ?? partner.lng;
+            partner.types = req.body.types ?? partner.types;
 
-            const updatedLocation = await location.save();
+            const updatedPartner = await partner.save();
 
             res.json({
-                message: 'Location updated successfully',
-                location: updatedLocation
+                message: 'Partner updated successfully',
+                partner: updatedPartner
             });
         } catch (err) {
             res.status(500).json({
-                message: 'Error when updating location.',
+                message: 'Error when updating partner.',
                 error: err
             });
         }
@@ -150,22 +150,22 @@ module.exports = {
      */
     remove: async (req, res) => {
         try {
-            const location = await LocationModel.findById(req.params.id);
+            const partner = await PartnerModel.findById(req.params.id);
 
-            if (!location) {
-                return res.status(404).json({ message: 'No such location' });
+            if (!partner) {
+                return res.status(404).json({ message: 'No such partner' });
             }
 
-            if (!isOwner(location, req.user)) {
+            if (!isOwner(partner, req.user)) {
                 return res.status(403).json({ message: 'Unauthorized access' });
             }
 
-            await location.deleteOne();
+            await partner.deleteOne();
 
             res.status(204).json();
         } catch (err) {
             res.status(500).json({
-                message: 'Error when deleting location.',
+                message: 'Error when deleting partner.',
                 error: err
             });
         }

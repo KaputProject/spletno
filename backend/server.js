@@ -14,6 +14,7 @@ const userRouter = require('./routes/userRoutes');
 const accountRouter = require('./routes/accountRoutes');
 const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
+const locationRouter = require('./routes/locationRoutes');
 
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
@@ -42,6 +43,7 @@ app.use('/users', userRouter);
 app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
+app.use('/locations', locationRouter);
 
 // Start Server
 app.listen(PORT, () => {
