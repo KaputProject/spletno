@@ -36,6 +36,8 @@ module.exports = {
                 year: endDate.getFullYear()
             });
 
+            // TODO: Make sure only one transaction with the specific month, year and user can be created
+
             const saved = await statement.save();
 
             account.statements.push(saved._id);

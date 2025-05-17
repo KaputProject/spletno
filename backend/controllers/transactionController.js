@@ -17,7 +17,7 @@ module.exports = {
     parse: async function (req, res) {
         try {
             const date = moment(req.body.date, 'DD.MM.YYYY').toDate();
-            const statement = await StatementModel.findById( req.body.statementId );
+            const statement = await StatementModel.findById( req.body.statementId ).populate('transactions');
 
             if (!statement) {
                 return res.status(404).json({
@@ -28,6 +28,14 @@ module.exports = {
             if (!isOwner(statement, req.user)) {
                 return res.status(403).json({
                     message: 'Forbidden: Not your statement'
+                });
+            }
+
+            // Check if a transaction with the same reference already exists
+            const duplicate = statement.transactions.find(t => t.reference === req.body.reference);
+            if (duplicate) {
+                return res.status(409).json({
+                    message: `Transaction with reference "${req.body.reference}" already exists in the statement.`
                 });
             }
 
@@ -55,6 +63,9 @@ module.exports = {
             }
 
             const savedTransaction = await transaction.save();
+
+            statement.transactions.push(savedTransaction._id);
+            await statement.save();
 
             return res.json({
                 message: 'Transaction parsed successfully',
