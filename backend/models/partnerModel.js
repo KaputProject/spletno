@@ -45,3 +45,4 @@ module.exports = mongoose.model('location', partnerSchema);
 
 // TODO: Make sure the partner is automatically deleted from the users table
 // TODO: Make sure the partner is deleted if its user is (to v user modelu nardis)
+// TODO: Add total_gained and implement the logic in the transaction controller

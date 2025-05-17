@@ -51,11 +51,20 @@ module.exports = {
                 outgoing: req.body.outgoing,
             });
 
-            // Looks for a partner with the matching identifier AND owned by this user
-            const partner = await PartnerModel.findOne({
-                identifier: req.body.partner,
-                user: req.user._id
-            });
+            let partner;
+            if (req.body.outgoing) {
+                // Looks for a partner with the matching identifier AND owned by this user
+                partner = await PartnerModel.findOne({
+                    identifier: req.body.description,
+                    user: req.user._id
+                });
+            } else {
+                // If it is incoming checks the partner not the description
+                partner = await PartnerModel.findOne({
+                    identifier: req.body.partner,
+                    user: req.user._id
+                });
+            }
 
             if (partner) {
                 transaction.known_partner = true;
