@@ -2,6 +2,7 @@ const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isOwner} = require("../utils/authorize");
+const partner = require("../controllers/partnerController");
 
 /**
  * userController.js
@@ -172,7 +173,6 @@ module.exports = {
             if (!isOwner(user, req.user)) {
                 return res.status(403).json({ message: 'Forbidden: No no no no no' });
             }
-
             await user.deleteOne();
 
             return res.status(204).send();
