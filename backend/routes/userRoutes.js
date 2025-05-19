@@ -11,6 +11,8 @@ router.get('/', authenticate, userController.list);
 /*
  * GET
  */
+router.get('/:id/statistics', authenticate, userController.getUserStatistics);
+
 router.get('/:id', authenticate, userController.show);
 
 /*

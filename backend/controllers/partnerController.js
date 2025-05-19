@@ -167,13 +167,10 @@ module.exports = {
                 return res.status(404).json({ message: 'No such partner' });
             }
 
-            if (!isOwner(partner, req.user)) {
-                return res.status(403).json({ message: 'Unauthorized access' });
-            }
-
             await partner.deleteOne();
 
-            res.status(204).json();
+            return res.status(200).json({ message: 'Partner removed successfully' });
+
         } catch (err) {
             res.status(500).json({
                 message: 'Error when deleting partner.',
@@ -214,4 +211,5 @@ module.exports = {
             res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
         }
     }
+
 };

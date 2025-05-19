@@ -52,7 +52,7 @@ const partnerSchema = new Schema({
 	}]
 });
 
-module.exports = mongoose.model('location', partnerSchema);
+module.exports = mongoose.model('partner', partnerSchema);
 
 // TODO: Make sure the partner is automatically deleted from the users table
 // TODO: Make sure the partner is deleted if its user is (to v user modelu nardis)
