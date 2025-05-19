@@ -6,6 +6,7 @@ const statementSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'user'
     },
+
     'account': {
         type: Schema.Types.ObjectId,
         ref: 'account'

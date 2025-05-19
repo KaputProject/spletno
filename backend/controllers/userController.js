@@ -2,7 +2,8 @@ const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {isOwner} = require("../utils/authorize");
-
+const AccountController = require('./accountController');
+const PartnerController = require('./partnerController');
 /**
  * userController.js
  *
@@ -161,21 +162,42 @@ module.exports = {
      * @param res
      * @returns {Promise<*>}
      */
+
     remove: async function (req, res) {
         try {
             const user = await UserModel.findById(req.params.id);
 
             if (!user) {
+                console.log("User not found:", req.params.id);
                 return res.status(404).json({ message: 'No such user' });
             }
 
-            if (!isOwner(user, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: No no no no no' });
+            // Remove accounts using controller
+            if (user.accounts?.length > 0) {
+                for (const accountId of user.accounts) {
+                    req.params.id = accountId; // nastavitev ID-ja v req.params
+                    req.user = user; // nastavitev uporabnika za isOwner preverbo
+                    await AccountController.remove(req, {
+                        status: () => ({ json: () => {} }) // dummy response object
+                    });
+                }
+            }
+
+            // Remove partners using controller
+            if (user.partners?.length > 0) {
+                for (const partnerId of user.partners) {
+                    req.params.id = partnerId;
+                    req.user = user;
+                    await PartnerController.remove(req, {
+                        status: () => ({ json: () => {} })
+                    });
+                }
             }
 
             await user.deleteOne();
 
-            return res.status(204).send();
+            return res.status(200).json({ message: 'User removed successfully' });
+
         } catch (err) {
             return res.status(500).json({
                 message: 'Error when deleting a user.',
@@ -183,4 +205,6 @@ module.exports = {
             });
         }
     }
+
+
 };
