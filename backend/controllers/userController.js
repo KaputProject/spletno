@@ -217,6 +217,10 @@ module.exports = {
         try {
             const userId = req.params.id;
 
+            if (req.user._id.toString() !== userId.toString()) {
+                return res.status(403).json({ error: 'Ni dovoljenja za dostop do teh podatkov' });
+            }
+
             const user = await UserModel.findById(userId)
                 .populate({
                     path: 'accounts',
