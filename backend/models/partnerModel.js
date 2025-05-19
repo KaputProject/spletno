@@ -31,6 +31,17 @@ const partnerSchema = new Schema({
 	'lng': {
 		type: Number,
 	},
+	'location': {
+		type: {
+			type: String,
+			enum: ['Point'],
+			default: 'Point'
+		},
+		coordinates: {
+			type: [Number], // [lng, lat]
+			index: '2dsphere'
+		}
+	},
 	'icon': {
 		type: String,
 	},
