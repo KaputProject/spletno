@@ -182,5 +182,133 @@ module.exports = {
                 error: err
             });
         }
+    },
+
+    /**
+     * userController.getUserStatistics()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    getUserStatistics: async function (req, res) {
+        try {
+            const userId = req.params.id;
+
+            const user = await UserModel.findById(userId)
+                .populate({
+                    path: 'accounts',
+                    populate: {
+                        path: 'statements',
+                        populate: {
+                            path: 'transactions',
+                            populate: {
+                                path: 'partner_parsed'
+                            }
+                        }
+                    }
+                })
+                .populate('partners');
+
+            if (!user) return res.status(404).json({ error: 'User not found' });
+
+            // Statistika po partnerjih na ravni uporabnika
+            const partnerStats = {};
+
+            for (const acc of user.accounts) {
+                for (const stmt of acc.statements) {
+                    for (const txn of stmt.transactions) {
+                        const partner = txn.partner_parsed;
+                        if (partner) {
+                            const key = partner._id.toString();
+                            if (!partnerStats[key]) {
+                                partnerStats[key] = {
+                                    name: partner.name,
+                                    number_of_transactions: 0,
+                                    amount: 0
+                                };
+                            }
+                            partnerStats[key].number_of_transactions += 1;
+                            partnerStats[key].amount += txn.change;
+                        }
+                    }
+                }
+            }
+
+            // Statistika po računih in izpiskih
+            const accounts = {};
+            for (const acc of user.accounts) {
+                const accStats = {
+                    name: acc.iban,
+                    balance: acc.balance,
+                    transactions: 0,
+                    in: 0,
+                    out: 0,
+                    partners: {},
+                    statements: []
+                };
+
+                for (const stmt of acc.statements) {
+                    const stmtStats = {
+                        month: stmt.month,
+                        year: stmt.year,
+                        total_transactions: stmt.transactions.length,
+                        in: stmt.inflow,
+                        out: stmt.outflow,
+                        balance: stmt.endBalance,
+                        partners: {}
+                    };
+
+                    for (const txn of stmt.transactions) {
+                        const partner = txn.partner_parsed;
+                        accStats.transactions += 1;
+                        if (txn.change >= 0) accStats.in += txn.change;
+                        else accStats.out += Math.abs(txn.change);
+
+                        if (partner) {
+                            const key = partner._id.toString();
+
+                            if (!accStats.partners[key]) {
+                                accStats.partners[key] = {
+                                    name: partner.name,
+                                    number_of_transactions: 0,
+                                    amount: 0
+                                };
+                            }
+                            if (!stmtStats.partners[key]) {
+                                stmtStats.partners[key] = {
+                                    name: partner.name,
+                                    number_of_transactions: 0,
+                                    amount: 0
+                                };
+                            }
+
+                            accStats.partners[key].number_of_transactions += 1;
+                            accStats.partners[key].amount += txn.change;
+
+                            stmtStats.partners[key].number_of_transactions += 1;
+                            stmtStats.partners[key].amount += txn.change;
+                        }
+                    }
+
+                    accStats.statements.push(stmtStats);
+                }
+
+                accounts[acc._id.toString()] = accStats;
+            }
+
+            res.json({
+                user: {
+                    name: user.name,
+                    partners: Object.values(partnerStats),
+                    accounts
+                }
+            });
+
+        } catch (err) {
+            console.error(err);
+            console.error("Napaka v getUserStatistics:", err.message, err.stack);
+            res.status(500).json({ error: 'Napaka pri pridobivanju statistike' });
+        }
     }
 };
