@@ -236,13 +236,9 @@ module.exports = {
                 return res.status(404).json({ message: 'No such transaction' });
             }
 
-            if (!isOwner(transaction, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: Not your transaction' });
-            }
-
             await transaction.deleteOne();
 
-            return res.status(204).send();
+            return res.status(200).json({ message: 'Transaction removed successfully' });
         } catch (err) {
             return res.status(500).json({
                 message: 'Error when deleting transaction.',
@@ -250,4 +246,6 @@ module.exports = {
             });
         }
     }
+
+
 };
