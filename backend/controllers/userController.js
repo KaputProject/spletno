@@ -69,7 +69,7 @@ module.exports = {
      * userController.show()
      */
     show: function (req, res) {
-        var id = req.params.id;
+        var id = req.user._id;
 
         UserModel.findOne({_id: id}, function (err, user) {
             if (err) {
@@ -337,6 +337,4 @@ module.exports = {
             res.status(500).json({ error: 'Napaka pri pridobivanju statistike' });
         }
     }
-
-
 };

@@ -34,15 +34,9 @@ const partnerSchema = new Schema({
 	'icon': {
 		type: String,
 	},
-
-	// TODO: This can be made with a separate model, to enable sorting and so on
 	'types': [{
 		type: String,
 	}]
 });
 
 module.exports = mongoose.model('partner', partnerSchema);
-
-// TODO: Make sure the partner is automatically deleted from the users table
-// TODO: Make sure the partner is deleted if its user is (to v user modelu nardis)
-// TODO: Add total_gained and implement the logic in the transaction controller

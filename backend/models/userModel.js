@@ -30,7 +30,7 @@ var userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'account'
     }],
-    // ko user delkite deite acc and part
+
     // Partners specific to the user
     'partners': [{
         type: Schema.Types.ObjectId,

@@ -1,9 +1,7 @@
-const StatementModel = require('../models/statementModel');
 const AccountModel = require('../models/accountModel');
 const { isOwner } = require('../utils/authorize');
 const moment = require('moment');
-const StatemantModel = require("../models/statementModel");
-const TransactionModel = require("../models/transactionModel");
+const StatementModel = require("../models/statementModel");
 const transactionController = require('./transactionController');
 
 module.exports = {
