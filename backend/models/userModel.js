@@ -1,7 +1,7 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-var userSchema = new Schema({
+const userSchema = new Schema({
     'username': {
         type: String,
         index: true,
@@ -21,7 +21,7 @@ var userSchema = new Schema({
         index: true,
         unique: true
     },
-    'dateOfBirth' : {
+    'dateOfBirth': {
         type: Date,
         default: Date.now()
     },
