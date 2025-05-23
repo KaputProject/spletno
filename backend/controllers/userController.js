@@ -1,7 +1,7 @@
 const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const {isOwner} = require("../utils/authorize");
+const { isOwner } = require("../utils/authorize");
 const AccountController = require('./accountController');
 const PartnerController = require('./partnerController');
 /**
@@ -88,8 +88,9 @@ module.exports = {
     /**
      * userController.show()
      */
+    // TODO: Fix this
     show: function (req, res) {
-        var id = req.user._id;
+        const id = req.user._id;
 
         UserModel.findOne({_id: id}, function (err, user) {
             if (err) {
