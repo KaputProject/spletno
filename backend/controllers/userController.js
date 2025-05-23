@@ -1,7 +1,7 @@
 const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const {isOwner} = require("../utils/authorize");
+const { isOwner } = require("../utils/authorize");
 const AccountController = require('./accountController');
 const PartnerController = require('./partnerController');
 /**
@@ -10,6 +10,25 @@ const PartnerController = require('./partnerController');
  * @description :: Server-side logic for managing users.
  */
 module.exports = {
+
+    /**
+     * userController.validate()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    validate: async (req, res) => {
+        try {
+            return res.status(200).json({
+                message: 'Token is valid',
+                user: req.user
+            });
+        } catch (err) {
+            console.error("Error during token validate:", err);
+            return res.status(500).json({ message: 'Server error', error: err });
+        }
+    },
 
     /**
      * userController.login()
@@ -39,6 +58,7 @@ module.exports = {
             );
 
             return res.json({
+                message: 'User logged in successfully.',
                 user: user,
                 token: token
             });
@@ -68,8 +88,9 @@ module.exports = {
     /**
      * userController.show()
      */
+    // TODO: Fix this
     show: function (req, res) {
-        var id = req.user._id;
+        const id = req.user._id;
 
         UserModel.findOne({_id: id}, function (err, user) {
             if (err) {
@@ -110,8 +131,16 @@ module.exports = {
 
             await user.save();
 
-            return res.status(201).json({
-                "message": "User created successfully",
+            const token = jwt.sign(
+                { userId: user._id },
+                process.env.JWT_SECRET_TOKEN,
+                { expiresIn: process.env.JWT_EXPIRES_IN }
+            );
+
+            return res.json({
+                message: 'User created successfully.',
+                user: user,
+                token: token
             });
         } catch (err) {
             return res.status(500).json({
@@ -162,7 +191,6 @@ module.exports = {
      * @param res
      * @returns {Promise<*>}
      */
-
     remove: async function (req, res) {
         try {
             const user = await UserModel.findById(req.params.id);
