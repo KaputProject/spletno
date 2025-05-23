@@ -83,7 +83,7 @@ module.exports = {
 
                 // TODO: Make a default icon
                 icon: "default.png",
-                types: req.body.types || []
+                tags: req.body.tags || []
             });
 
             const savedPartner = await partner.save();
@@ -129,7 +129,7 @@ module.exports = {
             partner.address = req.body.address ?? partner.address;
             partner.lat = req.body.lat ?? partner.lat;
             partner.lng = req.body.lng ?? partner.lng;
-            partner.types = req.body.types ?? partner.types;
+            partner.tags = req.body.tags ?? partner.tags;
 
             if (req.body.lat != null && req.body.lng != null) {
                 partner.location = {
@@ -211,5 +211,4 @@ module.exports = {
             res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
         }
     }
-
 };

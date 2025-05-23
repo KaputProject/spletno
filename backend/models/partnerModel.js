@@ -45,8 +45,9 @@ const partnerSchema = new Schema({
 	'icon': {
 		type: String,
 	},
-	'types': [{
-		type: String,
+	'tags': [{
+		type: Schema.Types.ObjectId,
+		ref: 'tag'
 	}]
 });
 
