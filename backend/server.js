@@ -5,6 +5,7 @@ const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 const jwt = require("jsonwebtoken");
+const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,7 +27,9 @@ app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true
 }));
+
 app.use(express.json());
+app.use(morgan('dev'));
 
 // Session Middleware
 app.use(session({
