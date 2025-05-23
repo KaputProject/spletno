@@ -4,11 +4,13 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
+const URL = process.env.REACT_APP_BACKEND_URL;
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
-    const url = process.env.REACT_APP_BACKEND_URL;
+
 
     const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         const loadUserFromToken = async () => {
             if (token) {
                 try {
-                    const res = await axios.get(`${url}/users/validate`, {
+                    const res = await axios.get(`${URL}/users/validate`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
 
@@ -46,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('${url}/users/login', { email, password });
+            const response = await axios.post(`${URL}/users/login`, { email, password });
             const newToken = response.data.token;
 
             localStorage.setItem('token', newToken);
@@ -64,9 +66,17 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (name, email, password) => {
+    const register = async ({ username, email, password, name, surname, dateOfBirth }) => {
         try {
-            const response = await axios.post('${url}/users/register', { name, email, password });
+            const response = await axios.post(`${URL}/users`, {
+                username,
+                email,
+                password,
+                name,
+                surname,
+                dateOfBirth
+            });
+
             const newToken = response.data.token;
 
             localStorage.setItem('token', newToken);
