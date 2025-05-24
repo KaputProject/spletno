@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,13 +8,19 @@ const Home = () => {
     const { user } = useAuth();
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 2 }}>
+        <Box
+            sx={{
+                width: '100%',
+                mt: 2,
+                px: 2,
+            }}
+        >
             <Box
                 sx={{
                     textAlign: 'center',
                     p: 4,
                     borderRadius: 4,
-                    backgroundColor: 'secondary',
+                    backgroundColor: 'primary',
                     boxShadow: 3,
                 }}
             >
@@ -22,7 +28,7 @@ const Home = () => {
                     Welcome to MyProfileHub
                 </Typography>
 
-                <Typography variant="p" sx={{ mt: 2, mb: 4 }}>
+                <Typography sx={{ mt: 2, mb: 4 }}>
                     A simple app that helps you manage your profile, settings, and activity all in one place. Whether you're checking your account details or adjusting preferences, MyProfileHub keeps it clean and user-friendly.
                 </Typography>
 
@@ -47,7 +53,7 @@ const Home = () => {
                     </Box>
                 )}
             </Box>
-        </Container>
+        </Box>
     );
 };
 
