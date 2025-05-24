@@ -5,6 +5,7 @@ const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
 const jwt = require("jsonwebtoken");
+const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,7 +15,8 @@ const userRouter = require('./routes/userRoutes');
 const accountRouter = require('./routes/accountRoutes');
 const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
-const locationRouter = require('./routes/locationRoutes');
+const PartnerRouter = require('./routes/partnerRoutes');
+
 
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
@@ -25,7 +27,9 @@ app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true
 }));
+
 app.use(express.json());
+app.use(morgan('dev'));
 
 // Session Middleware
 app.use(session({
@@ -43,7 +47,8 @@ app.use('/users', userRouter);
 app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
-app.use('/locations', locationRouter);
+app.use('/partners', PartnerRouter);
+
 
 // Start Server
 app.listen(PORT, () => {

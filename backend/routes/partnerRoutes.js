@@ -7,10 +7,12 @@ const authenticate = require('../middleware/authenticate.js');
  * GET
  */
 router.get('/', authenticate, locationController.list);
+router.get('/nearby', authenticate, locationController.findNearbyPartners);
 
 /*
  * GET
  */
+
 router.get('/:id', authenticate, locationController.show);
 
 /*

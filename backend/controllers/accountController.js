@@ -1,6 +1,7 @@
 const AccountModel = require('../models/accountModel.js');
 const {isOwner} = require("../utils/authorize");
-
+const StatementController = require('./statementController');
+const StatementModel = require("../models/statementModel");
 /**
  * accountController.js
  *
@@ -9,7 +10,62 @@ const {isOwner} = require("../utils/authorize");
 module.exports = {
 
     /**
-     * Create new account
+     * accountController.show()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    show: async function (req, res) {
+        try {
+            const account = await AccountModel.findById(req.params.id)
+                .populate('statements');
+
+            if (!account) {
+                return res.status(404).json({ message: 'Account not found' });
+            }
+
+            if (!isOwner(account, req.user)) {
+                return res.status(403).json({ message: 'Forbidden: Not the account owner' });
+            }
+
+            res.json({
+                message: 'Account details retrieved successfully',
+                account: account
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when fetching an account',
+                error: err
+            });
+        }
+    },
+
+    /**
+     * accountController.list()
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<void>}
+     */
+    list: async function (req, res) {
+        try {
+            const accounts = await AccountModel.find({ user: req.user._id });
+
+            res.json({
+                message: 'Users accounts retrieved successfully',
+                accounts: accounts
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when fetching accounts',
+                error: err
+            });
+        }
+    },
+
+    /**
+     * Create a new account
      */
     create: async function (req, res) {
         try {
@@ -22,6 +78,8 @@ module.exports = {
             });
 
             const savedAccount = await account.save();
+            req.user.accounts.push(savedAccount._id);
+            await req.user.save();
             res.status(201).json({
                 message: 'Account created successfully',
                 account: savedAccount
@@ -72,7 +130,7 @@ module.exports = {
      *
      * TODO: Make sure all the related statements get deleted as well
      */
-    remove: async function (req, res) {
+    remove : async function (req, res) {
         try {
             const account = await AccountModel.findById(req.params.id);
 
@@ -80,15 +138,20 @@ module.exports = {
                 return res.status(404).json({ message: 'No such account found' });
             }
 
-            if (!isOwner(account, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: Not the account owner' });
+            // Remove statements using a controller
+            if (account.statements?.length > 0) {
+                for (const statementId of account.statements) {
+                    req.params.id = statementId;
+                    req.user = req.user || account.user;
+                    await StatementController.remove(req, {
+                        status: () => ({ json: () => {} })
+                    });
+                }
             }
 
             await account.deleteOne();
 
-            res.status(200).send({
-                message: 'Account deleted successfully'
-            });
+            return res.status(200).json({ message: 'Account deleted successfully' });
         } catch (err) {
             res.status(500).json({
                 message: 'Error when deleting the account.',

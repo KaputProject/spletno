@@ -76,10 +76,14 @@ module.exports = {
                 address: req.body.address,
                 lat: req.body.lat,
                 lng: req.body.lng,
+                location: {
+                    type: 'Point',
+                    coordinates: [req.body.lng, req.body.lat]
+                },
 
                 // TODO: Make a default icon
                 icon: "default.png",
-                types: req.body.types || []
+                tags: req.body.tags || []
             });
 
             const savedPartner = await partner.save();
@@ -125,7 +129,14 @@ module.exports = {
             partner.address = req.body.address ?? partner.address;
             partner.lat = req.body.lat ?? partner.lat;
             partner.lng = req.body.lng ?? partner.lng;
-            partner.types = req.body.types ?? partner.types;
+            partner.tags = req.body.tags ?? partner.tags;
+
+            if (req.body.lat != null && req.body.lng != null) {
+                partner.location = {
+                    type: 'Point',
+                    coordinates: [req.body.lng, req.body.lat]
+                };
+            }
 
             const updatedPartner = await partner.save();
 
@@ -156,18 +167,48 @@ module.exports = {
                 return res.status(404).json({ message: 'No such partner' });
             }
 
-            if (!isOwner(partner, req.user)) {
-                return res.status(403).json({ message: 'Unauthorized access' });
-            }
-
             await partner.deleteOne();
 
-            res.status(204).json();
+            return res.status(200).json({ message: 'Partner removed successfully' });
+
         } catch (err) {
             res.status(500).json({
                 message: 'Error when deleting partner.',
                 error: err
             });
+        }
+    },
+
+    findNearbyPartners: async (req, res) => {
+        try {
+            const { lng, lat, radius = 5000 } = req.query;
+
+            if (!lng || !lat) {
+                return res.status(400).json({ error: 'lat and lng are required' });
+            }
+
+            const userId = req.user._id;
+
+            const nearbyPartners = await PartnerModel.find({
+                user: userId,
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: 'Point',
+                            coordinates: [parseFloat(lng), parseFloat(lat)]
+                        },
+                        $maxDistance: parseFloat(radius)
+                    }
+                }
+            });
+
+            res.json({
+                message: 'Nearby partners retrieved successfully',
+                partners: nearbyPartners
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
         }
     }
 };

@@ -1,6 +1,6 @@
-var express = require('express');
-var router = express.Router();
-var userController = require('../controllers/userController.js');
+const express = require('express');
+const router = express.Router();
+const userController = require('../controllers/userController.js');
 const authenticate = require('../middleware/authenticate.js');
 
 /*
@@ -11,6 +11,13 @@ router.get('/', authenticate, userController.list);
 /*
  * GET
  */
+router.get('/validate', authenticate, userController.validate);
+
+/*
+ * GET
+ */
+router.get('/:id/statistics', authenticate, userController.getUserStatistics);
+
 router.get('/:id', authenticate, userController.show);
 
 /*

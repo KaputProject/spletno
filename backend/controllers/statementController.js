@@ -1,10 +1,10 @@
-const StatementModel = require('../models/statementModel');
 const AccountModel = require('../models/accountModel');
 const { isOwner } = require('../utils/authorize');
 const moment = require('moment');
+const StatementModel = require("../models/statementModel");
+const transactionController = require('./transactionController');
 
 module.exports = {
-
     /**
      * statementController.parse()
      *
@@ -212,18 +212,25 @@ module.exports = {
                 return res.status(404).json({ message: 'Statement not found' });
             }
 
-            if (!isOwner(statement, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: Not the statement owner' });
+            // Remove transactions using controller
+            if (statement.transactions?.length > 0) {
+                for (const transactionId of statement.transactions) {
+                    req.params.id = transactionId;
+                    await transactionController.remove(req, {
+                        status: () => ({ json: () => {}, send: () => {} }) // dummy res
+                    });
+                }
             }
 
             await statement.deleteOne();
-            res.status(204).send();
+
+            return res.status(200).json({ message: 'Statement removed successfully' });
         } catch (err) {
-            console.error('Error deleting statement:', err);
             res.status(500).json({
                 message: 'Error when deleting statement',
                 error: err
             });
         }
     }
+
 };
