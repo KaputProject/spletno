@@ -1,9 +1,10 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import HomeIcon from '@mui/icons-material/Home';
 import PersonIcon from '@mui/icons-material/Person';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 import { useAuth } from './context/AuthContext';
 
@@ -13,7 +14,10 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 
 function App() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    const location = useLocation();
+
+    if (loading) return null;
 
     const NAVIGATION = [
         {
@@ -24,25 +28,20 @@ function App() {
         },
         ...(user
             ? [
-                {
-                    segment: 'profile',
-                    title: 'Profile',
-                    icon: <PersonIcon />,
-                    path: '/profile',
-                },
+                { kind: 'header', title: 'User' },
+                { segment: 'profile', title: 'Profile', icon: <PersonIcon /> },
             ]
-            : []),
+            : [
+                { kind: 'header', title: 'Auth' },
+                { segment: 'login', title: 'Login', icon: <DescriptionIcon /> },
+                { segment: 'register', title: 'Register', icon: <DescriptionIcon /> },
+            ]),
     ];
 
     return (
-        <AppProvider navigation={NAVIGATION}>
-            <DashboardLayout
-                branding={{
-                    title: 'Kaput',
-                    homeUrl: '/',
-                }}
-            >
-                <Routes>
+        <AppProvider navigation={navigation}>
+            <DashboardLayout branding={{ title: 'Kaput', homeUrl: '/' }}>
+                <Routes location={location}>
                     <Route path="/" element={<Home />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/login" element={<Login />} />
