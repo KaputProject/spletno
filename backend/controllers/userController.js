@@ -41,7 +41,7 @@ module.exports = {
         try {
             const { username, password } = req.body;
 
-            const user = await UserModel.findOne({ username });
+            const user = await UserModel.findOne({ username: username });
             if (!user) {
                 return res.status(401).json({ message: 'Invalid credentials' });
             }

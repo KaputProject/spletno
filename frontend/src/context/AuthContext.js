@@ -11,7 +11,6 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -46,9 +45,9 @@ export const AuthProvider = ({ children }) => {
         loadUserFromToken();
     }, [token]);
 
-    const login = async (email, password) => {
+    const login = async (username, password) => {
         try {
-            const response = await axios.post(`${URL}/users/login`, { email, password });
+            const response = await axios.post(`${URL}/users/login`, { username, password });
             const newToken = response.data.token;
 
             localStorage.setItem('token', newToken);
