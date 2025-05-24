@@ -5,12 +5,13 @@ import Register from './components/auth/Register';
 import Profile from './components/user/Profile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Home from './components/Home';
+import CustomAppBar from './components/navigation/CustomAppBar';
 
 
 function App() {
   return (
       <div>
-        <h1>React JWT Authentication Example</h1>
+        <CustomAppBar></CustomAppBar>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
