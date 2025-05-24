@@ -1,23 +1,19 @@
-import React from 'react';
-import { Typography, Box, Button, Container } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Typography, Box, Button } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, loading } = useAuth();
     const navigate = useNavigate();
 
-    if (!user) {
-        return (
-            <Box width="100%" sx={{ mt: 2 }}>
-                <Container>
-                    <Typography variant="h5" align="center">
-                        Loading...
-                    </Typography>
-                </Container>
-            </Box>
-        );
-    }
+    useEffect(() => {
+        if (!loading && !user) {
+            navigate('/login');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading || !user) return null;
 
     return (
         <Box
