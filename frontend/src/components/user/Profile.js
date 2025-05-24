@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button, Container } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,22 +9,30 @@ const Profile = () => {
 
     if (!user) {
         return (
-            <Container maxWidth="xl" sx={{ mt: 2 }}>
-                <Typography variant="h5" align="center">
-                    Loading...
-                </Typography>
-            </Container>
+            <Box width="100%" sx={{ mt: 2 }}>
+                <Container>
+                    <Typography variant="h5" align="center">
+                        Loading...
+                    </Typography>
+                </Container>
+            </Box>
         );
     }
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 2 }}>
+        <Box
+            sx={{
+                width: '100%',
+                mt: 2,
+                px: 2,
+            }}
+        >
             <Box
                 sx={{
                     textAlign: 'center',
                     p: 4,
                     borderRadius: 4,
-                    backgroundColor: 'secondary',
+                    backgroundColor: 'primary',
                     boxShadow: 3,
                 }}
             >
@@ -48,7 +56,7 @@ const Profile = () => {
                     Logout
                 </Button>
             </Box>
-        </Container>
+        </Box>
     );
 };
 

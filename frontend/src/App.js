@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import PersonIcon from '@mui/icons-material/Person';
 
@@ -12,8 +11,6 @@ import Home from './components/Home';
 import Profile from './components/user/Profile';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-
-const theme = createTheme();
 
 function App() {
     const { user } = useAuth();
@@ -38,23 +35,21 @@ function App() {
     ];
 
     return (
-        <ThemeProvider theme={theme}>
-            <AppProvider navigation={NAVIGATION}>
-                <DashboardLayout
-                    branding={{
-                        title: 'Kaput',
-                        homeUrl: '/',
-                    }}
-                >
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                    </Routes>
-                </DashboardLayout>
-            </AppProvider>
-        </ThemeProvider>
+        <AppProvider navigation={NAVIGATION}>
+            <DashboardLayout
+                branding={{
+                    title: 'Kaput',
+                    homeUrl: '/',
+                }}
+            >
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                </Routes>
+            </DashboardLayout>
+        </AppProvider>
     );
 }
 
