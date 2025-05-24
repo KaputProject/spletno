@@ -1,12 +1,54 @@
 import React from 'react';
+import { Container, Typography, Box, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-    return(
-        <div>
-            <h2>Home</h2>
-            <p>Welcome to the home page. Please login or register to view your profile.</p>
-        </div>
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
+    return (
+        <Container maxWidth="xl" sx={{ mt: 2 }}>
+            <Box
+                sx={{
+                    textAlign: 'center',
+                    p: 4,
+                    borderRadius: 4,
+                    backgroundColor: 'secondary',
+                    boxShadow: 3,
+                }}
+            >
+                <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    Welcome to MyProfileHub
+                </Typography>
+
+                <Typography variant="p" sx={{ mt: 2, mb: 4 }}>
+                    A simple app that helps you manage your profile, settings, and activity all in one place. Whether you're checking your account details or adjusting preferences, MyProfileHub keeps it clean and user-friendly.
+                </Typography>
+
+                {!user && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            onClick={() => navigate('/login')}
+                        >
+                            Login
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            size="large"
+                            onClick={() => navigate('/register')}
+                        >
+                            Register
+                        </Button>
+                    </Box>
+                )}
+            </Box>
+        </Container>
     );
-}
+};
 
 export default Home;
