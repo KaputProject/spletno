@@ -19,13 +19,10 @@ function App() {
 
     if (loading) return null;
 
-    const NAVIGATION = [
-        {
-            segment: '',
-            title: 'Home',
-            icon: <HomeIcon />,
-            path: '/',
-        },
+    const navigation = [
+        { kind: 'header', title: 'Main' },
+        { segment: '', title: 'Home', icon: <HomeIcon /> },
+
         ...(user
             ? [
                 { kind: 'header', title: 'User' },
