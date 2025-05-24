@@ -18,6 +18,7 @@ function App() {
 
     if (loading) return null;
 
+    // TODO: Make a default img
     const session = user
         ? {
             user: {
