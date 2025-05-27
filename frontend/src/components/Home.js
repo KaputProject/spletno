@@ -25,11 +25,11 @@ const Home = () => {
                 }}
             >
                 <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Welcome to MyProfileHub
+                    Welcome to Kaput
                 </Typography>
 
                 <Typography sx={{ mt: 2, mb: 4 }}>
-                    A simple app that helps you manage your profile, settings, and activity all in one place. Whether you're checking your account details or adjusting preferences, MyProfileHub keeps it clean and user-friendly.
+                    Welcome to Kaput — the app that generously reminds you you’re terrible with money. Watch your pathetic spending habits mapped out in glorious detail, so you can admire how expertly you throw cash into the void. Bonus: Now with location tracking for all those genius purchases you barely remember making. Bravo, financial mastermind.
                 </Typography>
 
                 {!user && (
@@ -40,7 +40,7 @@ const Home = () => {
                             size="large"
                             onClick={() => navigate('/login')}
                         >
-                            Login
+                            Sign In
                         </Button>
                         <Button
                             variant="outlined"
@@ -48,7 +48,7 @@ const Home = () => {
                             size="large"
                             onClick={() => navigate('/register')}
                         >
-                            Register
+                            Sign Up
                         </Button>
                     </Box>
                 )}

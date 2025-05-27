@@ -126,22 +126,21 @@ module.exports = {
      */
     create: async function (req, res) {
         try {
-            const existingUser = await UserModel.findOne({ username: req.body.username });
-            if (existingUser) {
-                return res.status(400).json({
-                    message: 'Username already taken.'
-                });
-            }
-
-            const user = new UserModel({
-                username: req.body.username,
-                password: bcrypt.hashSync(req.body.password, 10),
-                name: req.body.name,
-                surname: req.body.surname,
-                email: req.body.email,
-                identifier: req.body.identifier,
-                dateOfBirth: req.body.dateOfBirth
+            const existingUser = await UserModel.findOne({
+                $or: [
+                    { username: req.body.username },
+                    { email: req.body.email }
+                ]
             });
+
+            if (existingUser) {
+                if (existingUser.username === req.body.username) {
+                    return res.status(400).json({ message: 'Username already taken.' });
+                }
+                if (existingUser.email === req.body.email) {
+                    return res.status(400).json({ message: 'Email already registered.' });
+                }
+            }
 
             await user.save();
 
