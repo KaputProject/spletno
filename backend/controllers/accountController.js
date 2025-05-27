@@ -79,6 +79,7 @@ module.exports = {
 
             const savedAccount = await account.save();
             req.user.accounts.push(savedAccount._id);
+
             await req.user.save();
             res.status(201).json({
                 message: 'Account created successfully',
