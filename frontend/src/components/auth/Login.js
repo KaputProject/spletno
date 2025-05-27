@@ -13,9 +13,9 @@ const Login = () => {
         e.preventDefault();
         setError('');
 
-        const success = await login(username, password);
-        if (!success) {
-            setError('Invalid credentials');
+        const result = await login(username, password);
+        if (!result.success) {
+            setError(result.message);
         }
     };
 

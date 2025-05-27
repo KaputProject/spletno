@@ -41,14 +41,18 @@ module.exports = {
         try {
             const { username, password } = req.body;
 
+            if (!username || !password) {
+                return res.status(400).json({ message: 'Username and password are required.' });
+            }
+
             const user = await UserModel.findOne({ username: username });
             if (!user) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(404).json({ message: 'User not found.' });
             }
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(401).json({ message: 'Incorrect password.' });
             }
 
             const token = jwt.sign(
@@ -57,14 +61,17 @@ module.exports = {
                 { expiresIn: process.env.JWT_EXPIRES_IN }
             );
 
-            return res.json({
+            return res.status(200).json({
                 message: 'User logged in successfully.',
                 user: user,
                 token: token
             });
         } catch (err) {
-            console.log(err)
-            return res.status(500).json({ message: 'Server error', error: err });
+            console.error('Login error:', err);
+            return res.status(500).json({
+                message: 'Internal server error.',
+                error: err.message || err
+            });
         }
     },
 
@@ -119,6 +126,13 @@ module.exports = {
      */
     create: async function (req, res) {
         try {
+            const existingUser = await UserModel.findOne({ username: req.body.username });
+            if (existingUser) {
+                return res.status(400).json({
+                    message: 'Username already taken.'
+                });
+            }
+
             const user = new UserModel({
                 username: req.body.username,
                 password: bcrypt.hashSync(req.body.password, 10),

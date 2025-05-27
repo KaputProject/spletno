@@ -17,9 +17,11 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-        const success = await register({ username, email, password, name, surname, dateOfBirth });
-        if (!success) {
-            setError("Registration Failed");
+        const result = await register({ username, email, password, name, surname, dateOfBirth });
+        if (!result.success) {
+            setError(result.message);
+        } else {
+            navigate('/login');
         }
     };
 
