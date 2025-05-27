@@ -55,15 +55,27 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
 
             navigate('/profile');
-            return true;
+
+            return { success: true };
         } catch (error) {
             console.error("Login failed:", error);
+
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
-            return false;
+
+            let message = 'Login failed.';
+
+            if (error.response && error.response.data && error.response.data.message) {
+                message = error.response.data.message;
+            } else if (error.message) {
+                message = error.message;
+            }
+
+            return { success: false, message };
         }
     };
+
 
     const register = async ({ username, email, password, name, surname, dateOfBirth }) => {
         try {
@@ -82,13 +94,25 @@ export const AuthProvider = ({ children }) => {
             setToken(newToken);
             setUser(response.data.user);
             navigate('/profile');
-            return true;
+
+            return { success: true };
         } catch (error) {
             console.error("Registration failed:", error);
+
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
-            return false;
+
+            let message = 'Registration failed.';
+
+            if (error.response && error.response.data && error.response.data.message) {
+                message = error.response.data.message;
+            } else if (error.message) {
+                message = error.message;
+            }
+
+            // Vrnemo objekt s success: false in message
+            return { success: false, message };
         }
     };
 
