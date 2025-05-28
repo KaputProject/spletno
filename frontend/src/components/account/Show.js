@@ -6,13 +6,12 @@ import {
     Button,
     Paper,
     List,
-    ListItem,
-    ListItemText,
-    Divider,
     Box,
     CircularProgress,
     ButtonGroup,
 } from '@mui/material';
+import StatementListItem from "../statement/ListItem";
+import TransactionListItem from "../transaction/ListItem";
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -23,6 +22,7 @@ const AccountShow = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+    const [transactions, setTransactions] = useState([]);
 
     useEffect(() => {
         const fetchAccount = async () => {
@@ -120,40 +120,59 @@ const AccountShow = () => {
                     <strong>Balance:</strong> {account.balance.toFixed(2)}
                 </Typography>
 
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                    Statements
-                </Typography>
-                {account.statements && account.statements.length > 0 ? (
-                    <Paper elevation={2}>
-                        <List disablePadding>
-                            {account.statements.map((statement, idx) => (
-                                <React.Fragment key={statement._id || idx}>
-                                    <ListItem sx={{ py: 2, px: 3 }}>
-                                        <ListItemText
-                                            primary={`Date: ${new Date(statement.date).toLocaleDateString()}`}
-                                            secondary={
-                                                <>
-                                                    <Typography component="span" variant="body2" color="textPrimary">
-                                                        Amount: {statement.amount.toFixed(2)}
-                                                    </Typography>
-                                                    <br />
-                                                    <Typography component="span" variant="body2" color="textSecondary">
-                                                        {statement.description || 'No description'}
-                                                    </Typography>
-                                                </>
-                                            }
-                                        />
-                                    </ListItem>
-                                    {idx < account.statements.length - 1 && <Divider />}
-                                </React.Fragment>
-                            ))}
-                        </List>
-                    </Paper>
-                ) : (
-                    <Typography variant="body2" color="textSecondary">
-                        No statements found.
-                    </Typography>
-                )}
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+                    <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6">Statements</Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate(`/accounts/${id}/statements/create`)}
+                            >
+                                Add Statement
+                            </Button>
+                        </Box>
+
+                        {account.statements && account.statements.length > 0 ? (
+                            <Paper elevation={2}>
+                                <List disablePadding>
+                                    {account.statements.map((statement) => (
+                                        <StatementListItem key={statement._id} statement={statement} />
+                                    ))}
+                                </List>
+                            </Paper>
+                        ) : (
+                            <Typography variant="body2" color="textSecondary">
+                                No statements found.
+                            </Typography>
+                        )}
+                    </Box>
+
+                    <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6">Latest Transactions</Typography>
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate(`/accounts/${id}/transactions/create`)}
+                            >
+                                Add Transaction
+                            </Button>
+                        </Box>
+
+                        {transactions.length > 0 ? (
+                            <Paper elevation={2}>
+                                <List disablePadding>
+                                    {transactions.map((tx) => (
+                                        <TransactionListItem key={tx._id} transaction={tx} />
+                                    ))}
+                                </List>
+                            </Paper>
+                        ) : (
+                            <Typography variant="body2" color="textSecondary">
+                                No recent transactions.
+                            </Typography>
+                        )}
+                    </Box>
+                </Box>
             </Box>
         </Box>
     );
