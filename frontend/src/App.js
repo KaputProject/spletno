@@ -5,6 +5,7 @@ import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import HomeIcon from '@mui/icons-material/Home';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 import { useAuth } from './context/AuthContext';
 
@@ -17,6 +18,8 @@ import AccountCreate from './components/account/Create';
 import AccountShow from './components/account/Show';
 import StatementCreate from './components/statement/Create';
 import AccountUpdate from "./components/account/Update";
+import LocationList from './components/location/List';
+import LocationCreate from './components/location/Create';
 
 function App() {
     const { user, loading, login, logout } = useAuth();
@@ -49,8 +52,9 @@ function App() {
                 { kind: 'header', title: 'User' },
                 { segment: 'profile', title: 'Profile', icon: <PersonIcon />},
 
-                { kind: 'header', title: 'Accounts' },
+                { kind: 'header', title: 'General' },
                 { segment: 'accounts', title: 'My Accounts', icon: <AccountBalanceWalletIcon />},
+                { segment: 'locations', title: 'My Locations', icon: <LocationOnIcon />}
 
             ] : []
         ),
@@ -74,6 +78,8 @@ function App() {
                     <Route path="/accounts/:id" element={<AccountShow />} />
                     <Route path="/accounts/:id/statements/create" element={<StatementCreate />} />
                     <Route path="/accounts/:id/update" element={<AccountUpdate />} />
+                    <Route path="/locations" element={<LocationList />} />
+                    <Route path="/locations/create" element={<LocationCreate />} />
                 </Routes>
             </DashboardLayout>
         </AppProvider>
