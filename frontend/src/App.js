@@ -4,6 +4,7 @@ import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import HomeIcon from '@mui/icons-material/Home';
 import PersonIcon from '@mui/icons-material/Person';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 import { useAuth } from './context/AuthContext';
 
@@ -11,6 +12,11 @@ import Home from './components/Home';
 import Profile from './components/user/Profile';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import AccountList from './components/account/List';
+import AccountCreate from './components/account/Create';
+import AccountShow from './components/account/Show';
+import StatementCreate from './components/statement/Create';
+import AccountUpdate from "./components/account/Update";
 
 function App() {
     const { user, loading, login, logout } = useAuth();
@@ -41,7 +47,11 @@ function App() {
         ...(user
             ? [
                 { kind: 'header', title: 'User' },
-                { segment: 'profile', title: 'Profile', icon: <PersonIcon /> },
+                { segment: 'profile', title: 'Profile', icon: <PersonIcon />},
+
+                { kind: 'header', title: 'Accounts' },
+                { segment: 'accounts', title: 'My Accounts', icon: <AccountBalanceWalletIcon />},
+
             ] : []
         ),
     ];
@@ -59,6 +69,11 @@ function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/accounts" element={<AccountList />} />
+                    <Route path="/accounts/create" element={<AccountCreate />} />
+                    <Route path="/accounts/:id" element={<AccountShow />} />
+                    <Route path="/accounts/:id/statements/create" element={<StatementCreate />} />
+                    <Route path="/accounts/:id/update" element={<AccountUpdate />} />
                 </Routes>
             </DashboardLayout>
         </AppProvider>

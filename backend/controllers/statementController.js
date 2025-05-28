@@ -19,29 +19,42 @@ module.exports = {
                 return res.status(404).json({ message: `Account with IBAN: "${req.body.iban}" not found, please create it first.`});
             }
 
-            const startDate = moment(req.body.startDate, 'DD.MM.YYYY').toDate();
-            const endDate = moment(req.body.endDate, 'DD.MM.YYYY').toDate();
+            let startDate, endDate;
+            if (req.body.startDate && req.body.endDate) {
+                const inputStart = moment(req.body.startDate, 'DD.MM.YYYY');
+                const inputEnd = moment(req.body.endDate, 'DD.MM.YYYY');
+
+                // Midpoint date
+                const midDate = moment(inputStart.valueOf() + (inputEnd.valueOf() - inputStart.valueOf()) / 2);
+
+                // First and last day of the month that midDate falls in
+                startDate = midDate.clone().startOf('month').toDate();
+                endDate = midDate.clone().endOf('month').toDate();
+            } else {
+                // Default to current month
+                const now = moment();
+                startDate = now.clone().startOf('month').toDate();
+                endDate = now.clone().endOf('month').toDate();
+            }
 
             const statement = new StatementModel({
                 user: req.user._id,
                 account: account._id,
                 transactions: [],
-                startDate: startDate,
-                endDate: endDate,
+                startDate,
+                endDate,
                 inflow: req.body.inflow || 0,
                 outflow: req.body.outflow || 0,
                 startBalance: req.body.startBalance || 0,
-                endBalance: req.body.endBalance || 0,
-                month: endDate.getMonth() + 1,
-                year: endDate.getFullYear()
+                endBalance: req.body.endBalance || 0
             });
 
-            // TODO: Make sure only one transaction with the specific month, year and user can be created
+            // TODO: enforce only one statement per user/month/year
 
             const saved = await statement.save();
 
             account.statements.push(saved._id);
-            await account.save()
+            await account.save();
 
             res.status(201).json({
                 message: 'Statement parsed successfully',
@@ -127,25 +140,40 @@ module.exports = {
      */
     create: async (req, res) => {
         try {
+            const { accountId, transactions, inflow, outflow, startBalance, endBalance, month, year } = req.body;
+
+            const account = await AccountModel.findById(accountId);
+            if (!account) {
+                return res.status(404).json({ message: `Account with ID: "${req.body.account}" not found, please create it first.`});
+            }
+
+            const startDate = new Date(year, month, 1);
+            const endDate = new Date(year, month + 1, 0);
+
             const statement = new StatementModel({
                 user: req.user._id,
-                account: req.body.account,
-                transactions: req.body.transactions || [],
-                startDate: req.body.startDate || new Date(),
-                endDate: req.body.endDate || new Date(),
-                inflow: req.body.inflow || 0,
-                outflow: req.body.outflow || 0,
-                startBalance: req.body.startBalance || 0,
-                endBalance: req.body.endBalance || 0,
-                month: req.body.month ?? new Date().getMonth(),
-                year: req.body.year ?? new Date().getFullYear()
+                account,
+                transactions: transactions || [],
+                startDate,
+                endDate,
+                inflow: inflow || 0,
+                outflow: outflow || 0,
+                startBalance: startBalance || 0,
+                endBalance: endBalance || 0,
+                month,
+                year
             });
 
             const saved = await statement.save();
+
+            account.statements.push(saved._id);
+            await account.save();
+
             res.status(201).json({
                 message: 'Statement saved successfully',
                 statement: saved
             });
+
         } catch (err) {
             console.error('Error creating statement:', err);
             res.status(500).json({
@@ -181,8 +209,6 @@ module.exports = {
             statement.outflow = req.body.outflow ?? statement.outflow;
             statement.startBalance = req.body.startBalance ?? statement.startBalance;
             statement.endBalance = req.body.endBalance ?? statement.endBalance;
-            statement.month = req.body.month ?? statement.month;
-            statement.year = req.body.year ?? statement.year;
 
             const updated = await statement.save();
             res.json({
@@ -232,5 +258,4 @@ module.exports = {
             });
         }
     }
-
 };
