@@ -20,10 +20,7 @@ const StatementCreate = () => {
     const token = localStorage.getItem('token');
 
     const [selectedMonth, setSelectedMonth] = useState(dayjs());
-    const [inflow, setInflow] = useState('');
-    const [outflow, setOutflow] = useState('');
     const [startBalance, setStartBalance] = useState('');
-    const [endBalance, setEndBalance] = useState('');
     const [error, setError] = useState(null);
 
     const handleSubmit = async (e) => {
@@ -32,10 +29,7 @@ const StatementCreate = () => {
         try {
             await axios.post(`${URL}/statements`, {
                 accountId: accountId,
-                inflow: parseFloat(inflow),
-                outflow: parseFloat(outflow),
                 startBalance: parseFloat(startBalance),
-                endBalance: parseFloat(endBalance),
                 month: selectedMonth.month(),
                 year: selectedMonth.year()
             }, {
@@ -68,6 +62,7 @@ const StatementCreate = () => {
                             label="Select Month"
                             minDate={dayjs('2000-01-01')}
                             maxDate={dayjs()}
+                            fullWidth
                             sx={{ mb: 2 }}
                             value={selectedMonth}
                             onChange={(newValue) => setSelectedMonth(newValue)}
@@ -78,40 +73,12 @@ const StatementCreate = () => {
                     </LocalizationProvider>
 
                     <TextField
-                        label="Inflow"
-                        type="number"
-                        fullWidth
-                        value={inflow}
-                        onChange={(e) => setInflow(e.target.value)}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-                    <TextField
-                        label="Outflow"
-                        type="number"
-                        fullWidth
-                        value={outflow}
-                        onChange={(e) => setOutflow(e.target.value)}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-                    <TextField
                         label="Start Balance"
                         type="number"
                         fullWidth
                         value={startBalance}
                         onChange={(e) => setStartBalance(e.target.value)}
                         sx={{ mb: 2 }}
-                        required
-                    />
-                    <TextField
-                        label="End Balance"
-                        type="number"
-                        fullWidth
-                        value={endBalance}
-                        onChange={(e) => setEndBalance(e.target.value)}
-                        sx={{ mb: 3 }}
-                        required
                     />
 
                     <Button type="submit" variant="contained" fullWidth>

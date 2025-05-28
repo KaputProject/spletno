@@ -16,15 +16,6 @@ const StatementItem = ({ statement }) => {
                             <Typography variant="body2">
                                 Period: {new Date(statement.startDate).toLocaleDateString()} - {new Date(statement.endDate).toLocaleDateString()}
                             </Typography>
-                            <Typography variant="body2">
-                                Start Balance: {statement.startBalance.toFixed(2)}
-                            </Typography>
-                            <Typography variant="body2">
-                                Inflow: {statement.inflow.toFixed(2)} | Outflow: {statement.outflow.toFixed(2)}
-                            </Typography>
-                            <Typography variant="body2">
-                                End Balance: {statement.endBalance.toFixed(2)}
-                            </Typography>
                         </>
                     }
                 />
