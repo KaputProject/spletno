@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import {
     Box,
     Typography,
@@ -16,8 +19,7 @@ const StatementCreate = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState(dayjs());
     const [inflow, setInflow] = useState('');
     const [outflow, setOutflow] = useState('');
     const [startBalance, setStartBalance] = useState('');
@@ -29,13 +31,13 @@ const StatementCreate = () => {
 
         try {
             await axios.post(`${URL}/statements`, {
-                account: accountId,
-                startDate,
-                endDate,
+                accountId: accountId,
                 inflow: parseFloat(inflow),
                 outflow: parseFloat(outflow),
                 startBalance: parseFloat(startBalance),
-                endBalance: parseFloat(endBalance)
+                endBalance: parseFloat(endBalance),
+                month: selectedMonth.month(),
+                year: selectedMonth.year()
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -60,26 +62,21 @@ const StatementCreate = () => {
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <TextField
-                        label="Start Date"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        sx={{ mb: 2 }}
-                        required
-                    />
-                    <TextField
-                        label="End Date"
-                        type="date"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        sx={{ mb: 2 }}
-                        required
-                    />
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            views={['year', 'month']}
+                            label="Select Month"
+                            minDate={dayjs('2000-01-01')}
+                            maxDate={dayjs()}
+                            sx={{ mb: 2 }}
+                            value={selectedMonth}
+                            onChange={(newValue) => setSelectedMonth(newValue)}
+                            renderInput={(params) => (
+                                <TextField fullWidth sx={{ mb: 2 }} {...params} />
+                            )}
+                        />
+                    </LocalizationProvider>
+
                     <TextField
                         label="Inflow"
                         type="number"
