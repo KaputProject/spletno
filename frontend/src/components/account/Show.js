@@ -41,6 +41,20 @@ const AccountShow = () => {
         fetchAccount();
     }, [id, token]);
 
+    const handleDelete = () => async () => {
+        if (window.confirm('Are you sure you want to delete this account?')) {
+            try {
+                await axios.delete(`${URL}/accounts/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                navigate('/accounts');
+            } catch (err) {
+                setError('Failed to delete account.');
+            }
+        }
+    }
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
@@ -90,7 +104,7 @@ const AccountShow = () => {
                         <Button onClick={() => navigate(`/accounts/update/${id}`)}>
                             Edit Account
                         </Button>
-                        <Button color="error" onClick={() => navigate(`/accounts/delete/${id}`)}>
+                        <Button color="error" onClick={handleDelete()}>
                             Delete Account
                         </Button>
                     </ButtonGroup>
