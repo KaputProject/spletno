@@ -11,13 +11,11 @@ import axios from 'axios';
 
 import {
     GoogleMap,
-    LoadScript,
     Marker,
     Autocomplete
 } from '@react-google-maps/api';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 const defaultCenter = { lat: 46.5547, lng: 15.6459 };
 
@@ -62,11 +60,24 @@ const LocationCreate = () => {
         }
     };
 
-    const handleMapClick = (e) => {
+    const handleMapClick = async (e) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
-        setMarker({ lat, lng });
-        setForm((prev) => ({ ...prev, lat, lng }));
+
+        const geocoder = new window.google.maps.Geocoder();
+
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const address = results[0].formatted_address;
+
+                setForm((prev) => ({ ...prev, lat, lng, address }));
+                setMarker({ lat, lng });
+            } else {
+                console.error('Geocoder failed due to:', status);
+                setForm((prev) => ({ ...prev, lat, lng }));
+                setMarker({ lat, lng });
+            }
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -145,33 +156,29 @@ const LocationCreate = () => {
                             sx={{ mb: 3 }}
                         />
 
-                        <LoadScript
-                            googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-                            libraries={['places']}
-                        >
-                            <Box sx={{ mb: 2 }}>
-                                <Autocomplete
-                                    onLoad={(ref) => (autocompleteRef.current = ref)}
-                                    onPlaceChanged={handlePlaceSelected}
-                                >
-                                    <TextField
-                                        fullWidth
-                                        label="Search Address"
-                                        variant="outlined"
-                                    />
-                                </Autocomplete>
-                            </Box>
-
-                            <GoogleMap
-                                mapContainerStyle={mapContainerStyle}
-                                center={marker || defaultCenter}
-                                zoom={marker ? 15 : 12}
-                                onClick={handleMapClick}
-                                onLoad={(map) => (mapRef.current = map)}
+                        <Box sx={{ mb: 2 }}>
+                            <Autocomplete
+                                onLoad={(ref) => (autocompleteRef.current = ref)}
+                                onPlaceChanged={handlePlaceSelected}
                             >
-                                {marker && <Marker position={marker} />}
-                            </GoogleMap>
-                        </LoadScript>
+                                <TextField
+                                    fullWidth
+                                    label="Search Address"
+                                    variant="outlined"
+                                    required
+                                />
+                            </Autocomplete>
+                        </Box>
+
+                        <GoogleMap
+                            mapContainerStyle={mapContainerStyle}
+                            center={marker || defaultCenter}
+                            zoom={marker ? 15 : 12}
+                            onClick={handleMapClick}
+                            onLoad={(map) => (mapRef.current = map)}
+                        >
+                            {marker && <Marker position={marker} />}
+                        </GoogleMap>
 
                         {form.lat && form.lng && (
                             <Typography variant="body2" sx={{ mt: 2 }}>

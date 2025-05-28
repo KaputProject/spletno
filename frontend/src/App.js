@@ -20,6 +20,10 @@ import StatementCreate from './components/statement/Create';
 import AccountUpdate from "./components/account/Update";
 import LocationList from './components/location/List';
 import LocationCreate from './components/location/Create';
+import LocationShow from './components/location/Show';
+
+import { LoadScript } from '@react-google-maps/api';
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 function App() {
     const { user, loading, login, logout } = useAuth();
@@ -68,19 +72,25 @@ function App() {
             navigation={navigation}
         >
             <DashboardLayout branding={{ title: 'Kaput', homeUrl: '/' }}>
-                <Routes location={location}>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/accounts" element={<AccountList />} />
-                    <Route path="/accounts/create" element={<AccountCreate />} />
-                    <Route path="/accounts/:id" element={<AccountShow />} />
-                    <Route path="/accounts/:id/statements/create" element={<StatementCreate />} />
-                    <Route path="/accounts/:id/update" element={<AccountUpdate />} />
-                    <Route path="/locations" element={<LocationList />} />
-                    <Route path="/locations/create" element={<LocationCreate />} />
-                </Routes>
+                <LoadScript
+                    googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+                    libraries={['places']}
+                >
+                    <Routes location={location}>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/accounts" element={<AccountList />} />
+                        <Route path="/accounts/create" element={<AccountCreate />} />
+                        <Route path="/accounts/:id" element={<AccountShow />} />
+                        <Route path="/accounts/:id/statements/create" element={<StatementCreate />} />
+                        <Route path="/accounts/:id/update" element={<AccountUpdate />} />
+                        <Route path="/locations" element={<LocationList />} />
+                        <Route path="/locations/create" element={<LocationCreate />} />
+                        <Route path="/locations/:id" element={<LocationShow />} />
+                    </Routes>
+                </LoadScript>
             </DashboardLayout>
         </AppProvider>
     );

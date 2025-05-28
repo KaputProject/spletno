@@ -27,7 +27,6 @@ const PartnerList = () => {
                 const res = await axios.get(`${URL}/partners`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
                 setLocations(res.data.partners);
             } catch (err) {
                 console.error(err);
@@ -40,14 +39,20 @@ const PartnerList = () => {
         fetchPartners();
     }, [token]);
 
-    if (!loading) {
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-        </Box>
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (error) {
-        <Typography color="error">{error}</Typography>
+        return (
+            <Typography color="error" sx={{ mt: 4, textAlign: 'center' }}>
+                {error}
+            </Typography>
+        );
     }
 
     return (
@@ -71,13 +76,18 @@ const PartnerList = () => {
                     </Button>
                 </Box>
 
-                { locations.length === 0 ? (
+                {locations.length === 0 ? (
                     <Typography>No partner locations found.</Typography>
                 ) : (
                     <Paper elevation={2}>
                         <List>
                             {locations.map((partner) => (
-                                <ListItem key={partner._id} divider>
+                                <ListItem
+                                    key={partner._id}
+                                    divider
+                                    button
+                                    onClick={() => navigate(`/locations/${partner._id}`)}
+                                >
                                     <ListItemText
                                         primary={partner.name || 'Unnamed Partner'}
                                         secondary={

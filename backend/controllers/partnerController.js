@@ -49,7 +49,10 @@ module.exports = {
                 return res.status(403).json({ message: 'Unauthorized access' });
             }
 
-            res.json(partner);
+            res.json({
+                message: 'Partner details retrieved successfully',
+                partner: partner
+            });
         } catch (err) {
             res.status(500).json({
                 message: 'Error when getting partner.',
