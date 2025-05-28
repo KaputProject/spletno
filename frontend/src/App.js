@@ -16,6 +16,7 @@ import AccountList from './components/account/List';
 import AccountCreate from './components/account/Create';
 import AccountShow from './components/account/Show';
 import StatementCreate from './components/statement/Create';
+import AccountUpdate from "./components/account/Update";
 
 function App() {
     const { user, loading, login, logout } = useAuth();
@@ -72,6 +73,7 @@ function App() {
                     <Route path="/accounts/create" element={<AccountCreate />} />
                     <Route path="/accounts/:id" element={<AccountShow />} />
                     <Route path="/accounts/:id/statements/create" element={<StatementCreate />} />
+                    <Route path="/accounts/:id/update" element={<AccountUpdate />} />
                 </Routes>
             </DashboardLayout>
         </AppProvider>

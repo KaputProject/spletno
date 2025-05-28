@@ -43,7 +43,7 @@ const StatementCreate = () => {
     };
 
     return (
-        <Box sx={{ mt: 4, px: 2 }}>
+        <Box sx={{ mt: 2, px: 2 }}>
             <Paper sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
                 <Typography variant="h5" sx={{ mb: 3 }}>
                     Create Statement

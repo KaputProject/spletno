@@ -101,7 +101,7 @@ const AccountShow = () => {
                         <Button onClick={() => navigate('/accounts')}>
                             Back
                         </Button>
-                        <Button onClick={() => navigate(`/accounts/update/${id}`)}>
+                        <Button onClick={() => navigate(`/accounts/${id}/update`)}>
                             Edit Account
                         </Button>
                         <Button color="error" onClick={handleDelete()}>
