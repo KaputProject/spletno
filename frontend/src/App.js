@@ -13,14 +13,18 @@ import Home from './components/Home';
 import Profile from './components/user/Profile';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+
 import AccountList from './components/account/List';
 import AccountCreate from './components/account/Create';
 import AccountShow from './components/account/Show';
-import StatementCreate from './components/statement/Create';
 import AccountUpdate from "./components/account/Update";
+
 import LocationList from './components/location/List';
 import LocationCreate from './components/location/Create';
 import LocationShow from './components/location/Show';
+import LocationUpdate from './components/location/Update';
+
+import StatementCreate from './components/statement/Create';
 
 import { LoadScript } from '@react-google-maps/api';
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
@@ -89,6 +93,7 @@ function App() {
                         <Route path="/locations" element={<LocationList />} />
                         <Route path="/locations/create" element={<LocationCreate />} />
                         <Route path="/locations/:id" element={<LocationShow />} />
+                        <Route path="/locations/:id/update" element={<LocationUpdate />} />
                     </Routes>
                 </LoadScript>
             </DashboardLayout>

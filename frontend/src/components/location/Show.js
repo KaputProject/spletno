@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material';
+import {Box, Typography, Button, Paper, CircularProgress, ButtonGroup} from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
@@ -12,9 +12,9 @@ const mapContainerStyle = {
     height: '300px',
 };
 
-const PartnerShow = () => {
+const LocationShow = () => {
     const { id } = useParams();
-    const [partner, setPartner] = useState(null);
+    const [location, setLocation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
@@ -30,10 +30,10 @@ const PartnerShow = () => {
                 const res = await axios.get(`${URL}/partners/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setPartner(res.data.partner);
+                setLocation(res.data.partner);
             } catch (err) {
                 console.error(err);
-                setError('Failed to load partner.');
+                setError('Failed to load location.');
             } finally {
                 setLoading(false);
             }
@@ -41,6 +41,20 @@ const PartnerShow = () => {
 
         fetchPartner();
     }, [id, token]);
+
+    const handleDelete = () => async () => {
+        if (window.confirm('Are you sure you want to delete this location?')) {
+            try {
+                await axios.delete(`${URL}/partners/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                navigate('/locations');
+            } catch (err) {
+                setError('Failed to delete location.');
+            }
+        }
+    }
 
     if (loading) {
         return (
@@ -61,16 +75,19 @@ const PartnerShow = () => {
         );
     }
 
-    if (!partner) return null;
+    if (!location) return null;
 
-    const coordinates = partner.location?.coordinates || [0, 0];
+    const coordinates = location.location?.coordinates || [0, 0];
     const position = { lat: coordinates[1], lng: coordinates[0] };
 
     return (
-        <Box sx={{ width: '100%', mt: 2, px: 2 }}>
+        <Box sx={{
+            width: '100%',
+            mt: 2,
+            px: 2
+        }}>
             <Box
                 sx={{
-                    maxWidth: 700,
                     margin: '0 auto',
                     p: 4,
                     borderRadius: 4,
@@ -80,27 +97,35 @@ const PartnerShow = () => {
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                     <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                        {partner.name || 'Unnamed Partner'}
+                        {location.name}
                     </Typography>
-                    <Button variant="outlined" onClick={() => navigate('/locations')}>
-                        Back to List
-                    </Button>
+                    <ButtonGroup variant="outlined" aria-label="Location button group">
+                        <Button onClick={() => navigate('/locations')}>
+                            Back
+                        </Button>
+                        <Button onClick={() => navigate(`/locations/${id}/update`)}>
+                            Edit Location
+                        </Button>
+                        <Button color="error" onClick={handleDelete()}>
+                            Delete Location
+                        </Button>
+                    </ButtonGroup>
                 </Box>
 
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Identifier:</strong> {partner.identifier || 'N/A'}
+                    <strong>Identifier:</strong> {location.identifier || 'N/A'}
                 </Typography>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Description:</strong> {partner.description || 'N/A'}
+                    <strong>Description:</strong> {location.description || 'N/A'}
                 </Typography>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Address:</strong> {partner.address || 'N/A'}
+                    <strong>Address:</strong> {location.address || 'N/A'}
                 </Typography>
                 <Typography variant="subtitle1" sx={{ mb: 3 }}>
                     <strong>Coordinates:</strong> {position.lat}, {position.lng}
                 </Typography>
 
-                {isLoaded && partner.location?.coordinates ? (
+                {isLoaded && location.location?.coordinates ? (
                     <Paper elevation={2} sx={{ overflow: 'hidden', borderRadius: 2 }}>
                         <GoogleMap
                             mapContainerStyle={mapContainerStyle}
@@ -120,4 +145,4 @@ const PartnerShow = () => {
     );
 };
 
-export default PartnerShow;
+export default LocationShow;
