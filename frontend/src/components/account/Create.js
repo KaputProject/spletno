@@ -36,6 +36,10 @@ const CreateAccount = () => {
         }
     };
 
+    if (!token) {
+        navigate('/login');
+    }
+
     return (
         <Box sx={{
             width: '100%',
