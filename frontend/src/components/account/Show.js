@@ -152,7 +152,7 @@ const AccountShow = () => {
                             <Typography variant="h6">Latest Transactions</Typography>
                             <Button
                                 variant="contained"
-                                onClick={() => navigate(`/accounts/${id}/transactions/create`)}
+                                onClick={() => navigate(`/transactions/create`)}
                             >
                                 Add Transaction
                             </Button>

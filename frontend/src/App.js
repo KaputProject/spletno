@@ -26,6 +26,8 @@ import LocationUpdate from './components/location/Update';
 
 import StatementCreate from './components/statement/Create';
 
+import TransactionCreate from './components/transaction/Create';
+
 import { LoadScript } from '@react-google-maps/api';
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
@@ -94,6 +96,8 @@ function App() {
                         <Route path="/locations/create" element={<LocationCreate />} />
                         <Route path="/locations/:id" element={<LocationShow />} />
                         <Route path="/locations/:id/update" element={<LocationUpdate />} />
+
+                        <Route path="/transactions/create" element={<TransactionCreate />} />
                     </Routes>
                 </LoadScript>
             </DashboardLayout>
