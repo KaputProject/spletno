@@ -149,7 +149,8 @@ module.exports = {
                 surname: req.body.surname,
                 email: req.body.email,
                 identifier: req.body.identifier,
-                dateOfBirth: req.body.dateOfBirth
+                dateOfBirth: req.body.dateOfBirth,
+                isAdmin: req.body.isAdmin || false,
             });
 
             await user.save();
