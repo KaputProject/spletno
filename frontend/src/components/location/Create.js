@@ -92,7 +92,7 @@ const LocationCreate = () => {
         };
 
         try {
-            const res = await axios.post(`${URL}/partners`, payload, {
+            const res = await axios.post(`${URL}/locations`, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

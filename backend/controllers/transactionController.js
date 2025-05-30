@@ -1,6 +1,7 @@
 const TransactionModel = require('../models/transactionModel');
 const StatementModel = require('../models/statementModel');
-const PartnerModel = require('../models/partnerModel');
+const PartnerModel = require('../models/locationModel');
+const AccountModel = require('../models/accountModel');
 
 const { isOwner } = require('../utils/authorize');
 const moment = require("moment/moment");
@@ -99,8 +100,32 @@ module.exports = {
      */
     list: async function (req, res) {
         try {
-            const transactions = await TransactionModel.find({user: req.user._id})
-                .populate('partner_parsed');
+            const account = req.params.account;
+
+            let transactions = []
+            if (!account) {
+                transactions = await TransactionModel.find({user: req.user._id})
+                    .populate({
+                        path: 'location',
+                        select: '_id name'
+                    })
+                    .populate({
+                        path: 'account',
+                        select: '_id iban'
+                    })
+                    .sort({ datetime: -1 });
+            } else {
+                transactions = await TransactionModel.find({user: req.user._id, account: account})
+                    .populate({
+                        path: 'location',
+                        select: '_id name'
+                    })
+                    .populate({
+                        path: 'account',
+                        select: '_id iban'
+                    })
+                    .sort({ datetime: -1 });
+            }
 
             return res.json({
                 message: 'Users transactions successfully fetched',
@@ -124,8 +149,9 @@ module.exports = {
     show: async function (req, res) {
         try {
             const transaction = await TransactionModel.findById(req.params.id)
-                .populate('partner_parsed')
-                .populate('user', '--password');
+                .populate('location')
+                .populate('user', '--password')
+                .populate('account');
 
             if (!transaction) {
                 return res.status(404).json({ message: 'No such transaction' });
@@ -152,33 +178,70 @@ module.exports = {
      *
      * @param req
      * @param res
+     * @param next
      * @returns {Promise<*>}
      */
-    create: async function (req, res) {
-        const transaction = new TransactionModel({
-            datetime: req.body.datetime,
-            reference: req.body.reference,
-            partner_original: req.body.partner_original,
-            description: req.body.description,
-            change: req.body.change,
-            balanceAfter: req.body.balance,
-            outgoing: req.body.outgoing,
-            known_partner: req.body.known_partner,
-            partner_parsed: req.body.partner_parsed
-        });
-
-        if (!isOwner(transaction, req.user)) {
-            return res.status(403).json({ message: 'Forbidden: Cannot create transaction for another user' });
-        }
-
+    create: async function (req, res, next) {
         try {
-            const savedTransaction = await transaction.save();
-            return res.status(201).json(savedTransaction);
-        } catch (err) {
-            return res.status(500).json({
-                message: 'Error when creating transaction.',
-                error: err
+            const { datetime, account: accountId, description, change, outgoing, location } = req.body;
+
+            const date = new Date(datetime);
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            const account = await AccountModel.findById(accountId);
+            if (!account) {
+                return res.status(404).json({ message: 'Account not found' });
+            }
+
+            // Checks if a statement(month), to which this transaction belongs to exists
+            let statement = await StatementModel.findOne({
+                account: account,
+                month: month,
+                year: year
             });
+
+            // If not, a new one is created
+            if (!statement) {
+                statement = new StatementModel({
+                    user: req.user._id,
+                    account: account,
+                    month: month,
+                    year: year,
+                    startDate: new Date(year, month, 1),
+                    endDate: new Date(year, month + 1, 0)
+                });
+                await statement.save();
+
+                account.statements.push(statement);
+                account.save();
+            }
+
+            const transaction = new TransactionModel({
+                user: req.user._id,
+                account: account,
+                location: location || null,
+                datetime: datetime,
+                description: description || null,
+                change: change,
+                outgoing: outgoing,
+                statement: statement._id
+            });
+
+            const savedTransaction = await transaction.save();
+
+            // Transaction is added to the statement
+            statement.transactions.push(savedTransaction._id);
+            await statement.save();
+
+            // If the transaction has a location, the transaction is added to the location itself
+
+            return res.status(201).json({
+                message: 'Transaction created successfully',
+                transaction: savedTransaction
+            });
+        } catch (err) {
+            return next(err);
         }
     },
 

@@ -6,12 +6,10 @@ const statementSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'user'
     },
-
     'account': {
         type: Schema.Types.ObjectId,
         ref: 'account'
     },
-
     'transactions': [{
         type: Schema.Types.ObjectId,
         ref: 'transaction'
@@ -52,5 +50,7 @@ const statementSchema = new Schema({
         default: new Date().getFullYear()
     }
 });
+
+statementSchema.index({ account: 1, month: 1, year: 1 }, { unique: true });
 
 module.exports = mongoose.model('statement', statementSchema);

@@ -31,6 +31,11 @@ const AccountShow = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
+                const resT = await axios.get(`${URL}/transactions?account=${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setTransactions(resT.data.transactions);
                 setAccount(res.data.account);
                 setLoading(false);
             } catch (err) {
@@ -152,13 +157,13 @@ const AccountShow = () => {
                             <Typography variant="h6">Latest Transactions</Typography>
                             <Button
                                 variant="contained"
-                                onClick={() => navigate(`/accounts/${id}/transactions/create`)}
+                                onClick={() => navigate(`/transactions/create`)}
                             >
                                 Add Transaction
                             </Button>
                         </Box>
 
-                        {transactions.length > 0 ? (
+                        {transactions ? (
                             <Paper elevation={2}>
                                 <List disablePadding>
                                     {transactions.map((tx) => (
