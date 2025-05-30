@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { isOwner } = require("../utils/authorize");
 const AccountController = require('./accountController');
-const PartnerController = require('./partnerController');
+const LocationController = require('./locationController');
 const fs = require('fs');
 const path = require('path');
 
@@ -168,12 +168,9 @@ module.exports = {
         } catch (err) {
             console.error('Error in userController.create:', err)
             return res.status(500).json({
-
                 message: 'Error when creating user',
                 error: err,
-                error: err.stack
             });
-            //console.error('Error in userController.create:', err)
         }
     },
 
@@ -186,8 +183,7 @@ module.exports = {
      */
     update: async function (req, res) {
         try {
-            const id = req.params.id;
-            const user = await UserModel.findOne({ _id: id });
+            const user = await UserModel.findOne({ _id: req.user._id });
 
             if (!user) {
                 return res.status(404).json({ message: 'No such user' });
@@ -241,7 +237,7 @@ module.exports = {
      */
     remove: async function (req, res) {
         try {
-            const user = await UserModel.findById(req.params.id);
+            const user = await UserModel.findById(req.user._id);
 
             if (!user) {
                 console.log("User not found:", req.params.id);
@@ -274,11 +270,11 @@ module.exports = {
             }
 
             // Remove partners using controller
-            if (user.partners?.length > 0) {
-                for (const partnerId of user.partners) {
-                    req.params.id = partnerId;
+            if (user.locations?.length > 0) {
+                for (const locationId of user.locations) {
+                    req.params.id = locationId;
                     req.user = user;
-                    await PartnerController.remove(req, {
+                    await LocationController.remove(req, {
                         status: () => ({ json: () => {} })
                     });
                 }
@@ -305,13 +301,7 @@ module.exports = {
      */
     getUserStatistics: async function (req, res) {
         try {
-            const userId = req.params.id;
-
-            if (req.user._id.toString() !== userId.toString()) {
-                return res.status(403).json({ error: 'Ni dovoljenja za dostop do teh podatkov' });
-            }
-
-            const user = await UserModel.findById(userId)
+            const user = await UserModel.findById(req.user._id)
                 .populate({
                     path: 'accounts',
                     populate: {

@@ -19,6 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import axios from 'axios';
 
+const URL = process.env.REACT_APP_BACKEND_URL;
+
 const Profile = () => {
     const { user, logout, loading, refreshUser } = useAuth();
     const navigate = useNavigate();
@@ -95,7 +97,7 @@ const Profile = () => {
 
         try {
             await axios.put(
-                `${process.env.REACT_APP_BACKEND_URL}/users/${user._id}`,
+                `${URL}/users/${user._id}`,
                 data,
                 {
                     headers: {
@@ -119,7 +121,7 @@ const Profile = () => {
     const handleDelete = async () => {
         try {
             await axios.delete(
-                `${process.env.REACT_APP_BACKEND_URL}/users/${user._id}`,
+                `${URL}/users/${user._id}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -160,7 +162,7 @@ const Profile = () => {
                 <Grid container spacing={2} alignItems="center" justifyContent="center" sx={{ mb: 2 }}>
                     <Grid item>
                         <Avatar
-                            src={preview || `${process.env.REACT_APP_BACKEND_URL}${user.avatarUrl}` || '/default-avatar.png'}
+                            src={preview || `${URL}${user.avatarUrl}` || '/default-avatar.png'}
                             sx={{ width: 80, height: 80 }}
                         />
                     </Grid>
