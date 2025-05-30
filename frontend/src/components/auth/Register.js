@@ -7,6 +7,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
@@ -101,7 +102,15 @@ const Register = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Confirm Password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                    />
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
                         <Button variant="contained" color="primary" type="submit">
                             Sign Up

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController.js');
 const authenticate = require('../middleware/authenticate.js');
+const upload = require('../middleware/upload');
 
 /*
  * GET
@@ -33,7 +34,7 @@ router.post('/', userController.create);
 /*
  * PUT
  */
-router.put('/:id', authenticate, userController.update);
+router.put('/:id', authenticate, upload.single('avatar'), userController.update);
 
 /*
  * DELETE
