@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { isOwner } = require("../utils/authorize");
 const AccountController = require('./accountController');
-const PartnerController = require('./partnerController');
+const PartnerController = require('./locationController');
 /**
  * userController.js
  *

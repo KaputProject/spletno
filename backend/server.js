@@ -17,7 +17,6 @@ const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
 const PartnerRouter = require('./routes/partnerRoutes');
 
-
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
@@ -48,6 +47,19 @@ app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
 app.use('/partners', PartnerRouter);
+
+app.use((err, req, res, next) => {
+    console.error('--- ERROR START ---');
+    console.error(`Error Message: ${err.message}`);
+    console.error(`Stack Trace:\n${err.stack}`);
+    console.error('--- ERROR END ---');
+
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+
 
 
 // Start Server

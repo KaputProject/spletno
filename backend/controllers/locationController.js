@@ -1,8 +1,8 @@
-const PartnerModel = require('../models/partnerModel.js');
+const PartnerModel = require('../models/locationModel.js');
 const { isOwner } = require('../utils/authorize.js');
 
 /**
- * partnerController.js
+ * locationController.js
  *
  * @description :: Server-side logic for managing locations.
  */

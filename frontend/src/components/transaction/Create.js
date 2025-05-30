@@ -25,17 +25,16 @@ const TransactionCreate = () => {
 
     const [form, setForm] = useState({
         user: '',
-        statement: prefilledAccountId || '',
-        location: '',
+        account: '',
         datetime: '',
-        reference: '',
-        partner_original: '',
+
+        location: '',
         description: '',
         change: '',
         balanceAfter: '',
         outgoing: true,
-        known_partner: false,
-        partner_parsed: ''
+        known_location: false,
+        location_parsed: ''
     });
 
     const handleChange = (e) => {
@@ -75,9 +74,6 @@ const TransactionCreate = () => {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
                 ]);
-
-                console.log(accountsRes.data);
-                console.log(locationsRes.data);
 
                 setAccounts(accountsRes.data.accounts || []);
                 setLocations(locationsRes.data.partners || []);
@@ -121,8 +117,8 @@ const TransactionCreate = () => {
                             select
                             fullWidth
                             label="Account"
-                            name="statement"
-                            value={form.statement}
+                            name="account"
+                            value={form.account}
                             onChange={handleChange}
                             sx={{ mb: 3 }}
                             required

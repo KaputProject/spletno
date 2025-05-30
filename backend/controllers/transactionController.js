@@ -1,6 +1,6 @@
 const TransactionModel = require('../models/transactionModel');
 const StatementModel = require('../models/statementModel');
-const PartnerModel = require('../models/partnerModel');
+const PartnerModel = require('../models/locationModel');
 
 const { isOwner } = require('../utils/authorize');
 const moment = require("moment/moment");
@@ -152,33 +152,59 @@ module.exports = {
      *
      * @param req
      * @param res
+     * @param next
      * @returns {Promise<*>}
      */
-    create: async function (req, res) {
-        const transaction = new TransactionModel({
-            datetime: req.body.datetime,
-            reference: req.body.reference,
-            partner_original: req.body.partner_original,
-            description: req.body.description,
-            change: req.body.change,
-            balanceAfter: req.body.balance,
-            outgoing: req.body.outgoing,
-            known_partner: req.body.known_partner,
-            partner_parsed: req.body.partner_parsed
-        });
-
-        if (!isOwner(transaction, req.user)) {
-            return res.status(403).json({ message: 'Forbidden: Cannot create transaction for another user' });
-        }
-
+    create: async function (req, res, next) {
         try {
+            const { datetime, account, description, change, outgoing, location } = req.body;
+
+            const date = new Date(datetime);
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            // Checks if a statement(month), to which this transaction belongs to exists
+            let statement = await StatementModel.findOne({
+                account: account,
+                month: month,
+                year: year
+            });
+
+            // If not, a new one is created
+            if (!statement) {
+                statement = new StatementModel({
+                    user: req.user._id,
+                    account: account,
+                    month: month,
+                    year: year,
+                    startDate: new Date(year, month, 1),
+                    endDate: new Date(year, month + 1, 0)
+                });
+                await statement.save();
+            }
+
+            const transaction = new TransactionModel({
+                user: req.user._id,
+                account: account,
+                partner: location || null,
+                datetime: datetime,
+                description: description || null,
+                change: change,
+                outgoing: outgoing,
+                statement: statement._id
+            });
+
             const savedTransaction = await transaction.save();
+
+            // Transaction is added to the statement
+            statement.transactions.push(savedTransaction._id);
+            await statement.save();
+
+            // If the transaction has a location, the transaction is added to the location itself
+
             return res.status(201).json(savedTransaction);
         } catch (err) {
-            return res.status(500).json({
-                message: 'Error when creating transaction.',
-                error: err
-            });
+            return next(err);
         }
     },
 
