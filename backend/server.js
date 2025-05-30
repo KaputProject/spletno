@@ -15,7 +15,7 @@ const userRouter = require('./routes/userRoutes');
 const accountRouter = require('./routes/accountRoutes');
 const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
-const PartnerRouter = require('./routes/partnerRoutes');
+const locationRouter = require('./routes/locationRoutes');
 
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
@@ -46,7 +46,7 @@ app.use('/users', userRouter);
 app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
-app.use('/partners', PartnerRouter);
+app.use('/locations', locationRouter);
 
 app.use((err, req, res, next) => {
     console.error('--- ERROR START ---');

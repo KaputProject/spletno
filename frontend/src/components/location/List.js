@@ -14,7 +14,7 @@ import axios from 'axios';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
-const PartnerList = () => {
+const LocationList = () => {
     const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -24,10 +24,10 @@ const PartnerList = () => {
     useEffect(() => {
         const fetchPartners = async () => {
             try {
-                const res = await axios.get(`${URL}/partners`, {
+                const res = await axios.get(`${URL}/locations`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setLocations(res.data.partners);
+                setLocations(res.data.locations);
             } catch (err) {
                 console.error(err);
                 setError('Failed to load locations.');
@@ -106,4 +106,4 @@ const PartnerList = () => {
     );
 };
 
-export default PartnerList;
+export default LocationList;

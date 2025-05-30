@@ -70,13 +70,13 @@ const TransactionCreate = () => {
                     axios.get(`${URL}/accounts`, {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
-                    axios.get(`${URL}/partners`, {
+                    axios.get(`${URL}/locations`, {
                         headers: { Authorization: `Bearer ${token}` }
                     }),
                 ]);
 
                 setAccounts(accountsRes.data.accounts || []);
-                setLocations(locationsRes.data.partners || []);
+                setLocations(locationsRes.data.locations || []);
             } catch (err) {
                 console.error('Error fetching data:', err);
             }

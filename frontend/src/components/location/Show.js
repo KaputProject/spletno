@@ -27,7 +27,7 @@ const LocationShow = () => {
     useEffect(() => {
         const fetchPartner = async () => {
             try {
-                const res = await axios.get(`${URL}/partners/${id}`, {
+                const res = await axios.get(`${URL}/locations/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setLocation(res.data.partner);

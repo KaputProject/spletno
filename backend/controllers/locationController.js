@@ -16,15 +16,15 @@ module.exports = {
      */
     list: async (req, res) => {
         try {
-            const partners = await PartnerModel.find({ user: req.user._id }).populate('user');
+            const locations = await PartnerModel.find({ user: req.user._id }).populate('user');
 
             res.json({
-                message: 'User partners retrieved successfully',
-                partners
+                message: 'User locations retrieved successfully',
+                locations
             });
         } catch (err) {
             res.status(500).json({
-                message: 'Error when getting user partners.',
+                message: 'Error when getting user locations.',
                 error: err
             });
         }

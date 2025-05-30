@@ -46,7 +46,7 @@ const LocationEdit = () => {
     useEffect(() => {
         const fetchLocation = async () => {
             try {
-                const res = await axios.get(`${URL}/partners/${id}`, {
+                const res = await axios.get(`${URL}/locations/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -121,7 +121,7 @@ const LocationEdit = () => {
         };
 
         try {
-            await axios.put(`${URL}/partners/${id}`, payload, {
+            await axios.put(`${URL}/locations/${id}`, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
