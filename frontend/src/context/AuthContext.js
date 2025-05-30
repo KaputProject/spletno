@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             setToken(newToken);
             setUser(response.data.user);
 
-            navigate('/profile');
+            navigate('/');
 
             return { success: true };
         } catch (error) {

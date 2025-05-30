@@ -13,9 +13,22 @@ module.exports = async (req, res, next) => {
 
         if (!user) return res.sendStatus(401);
 
-        req.user = user;
+        const targetUserId = req.body?.userId;
+
+        if (user.isAdmin && targetUserId) {
+            const targetUser = await UserModel.findById(targetUserId).select('-password');
+            if (!targetUser) return res.status(404).json({ error: 'Target user not found' });
+
+            // If an admin is performing an action on another user, set that user as req.user
+            req.user = targetUser;
+            req.admin = user;
+        } else {
+            req.user = user;
+        }
+
         next();
     } catch (err) {
+        console.error('Auth error:', err);
         return res.sendStatus(403);
     }
 };

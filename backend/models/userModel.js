@@ -36,6 +36,11 @@ const userSchema = new Schema({
         ref: 'account'
     }],
 
+    'isAdmin': {
+        type: Boolean,
+        default: false
+    },
+
     // Partners specific to the user
     'partners': [{
         type: Schema.Types.ObjectId,

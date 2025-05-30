@@ -7,6 +7,10 @@ const locationSchema = new Schema({
 		ref: 'user',
 		index: true
 	},
+	'transactions': [{
+		type: Schema.Types.ObjectId,
+		ref: 'transaction'
+	}],
 
 	'name': {
 		type: String,
@@ -18,10 +22,16 @@ const locationSchema = new Schema({
 	'description': {
 		type: String,
 	},
+
 	'total_spent': {
 		type: Number,
 		default: 0
 	},
+	'total_received': {
+		type: Number,
+		default: 0
+	},
+
 	'address': {
 		type: String,
 	},
