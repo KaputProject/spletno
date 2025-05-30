@@ -7,9 +7,14 @@ const transactionSchema = new Schema({
 		ref: 'user',
 		index: true
 	},
-	'statement': {
+	'account': {
 		type: Schema.Types.ObjectId,
-		ref: 'statement',
+		ref: 'account',
+		index: true
+	},
+	'location': {
+		type: Schema.Types.ObjectId,
+		ref: 'location',
 		index: true
 	},
 
@@ -17,39 +22,24 @@ const transactionSchema = new Schema({
 		type: Date,
 		default: Date.now()
 	},
-	'reference': {
-		type: Number,
-	},
-
-	'partner_original': {
-		type: String,
-	},
 	'description': {
 		type: String,
+		default: null
 	},
-
 	'change': {
 		type: Number,
-		default: 0
-	},
-	'balanceAfter': {
-		type: Number,
-		default: 0
+		default: 0,
+		min: [0, 'Change amount must be a positive number']
 	},
 	'outgoing': {
 		type: Boolean,
 		default: true
 	},
 
-	'known_partner': {
-		type: Boolean,
-		default: false
+	'reference': {
+		type: Number,
+		default: null
 	},
-	'partner_parsed': {
-		type: Schema.Types.ObjectId,
-		ref: 'partner',
-		index: true
-	}
 });
 
 module.exports = mongoose.model('transaction', transactionSchema);
