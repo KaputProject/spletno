@@ -26,6 +26,11 @@ const userSchema = new Schema({
         default: Date.now()
     },
 
+    'avatarUrl': {
+        type: String,
+        default: ''
+    },
+
     'accounts': [{
         type: Schema.Types.ObjectId,
         ref: 'account'

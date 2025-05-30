@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Box, Typography, TextField, Button, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -6,6 +7,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
@@ -17,87 +19,113 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-        const success = await register({ username, email, password, name, surname, dateOfBirth });
-        if (!success) {
-            setError("Registration Failed");
+        const result = await register({ username, email, password, name, surname, dateOfBirth });
+        if (!result.success) {
+            setError(result.message);
+        } else {
+            navigate('/login');
         }
     };
 
     return (
-        <div>
-            <h2>Register</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="username">Username:</label>
-                    <input
-                        type="text"
-                        id="username"
+        <Box sx={{ width: '100%', mt: 4, px: 2 }}>
+            <Box
+                sx={{
+                    maxWidth: 500,
+                    mx: 'auto',
+                    p: 4,
+                    borderRadius: 4,
+                    boxShadow: 3,
+                    backgroundColor: 'background.paper',
+                }}
+            >
+                <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                    Sign Up
+                </Typography>
+
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="name">Name:</label>
-                    <input
-                        type="text"
-                        id="name"
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="surname">Surname:</label>
-                    <input
-                        type="text"
-                        id="surname"
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Surname"
                         value={surname}
                         onChange={(e) => setSurname(e.target.value)}
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="dateOfBirth">Date of Birth:</label>
-                    <input
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Date of Birth"
                         type="date"
-                        id="dateOfBirth"
+                        InputLabelProps={{ shrink: true }}
                         value={dateOfBirth}
                         onChange={(e) => setDateOfBirth(e.target.value)}
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="email">Email:</label>
-                    <input
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Email"
                         type="email"
-                        id="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="password">Password:</label>
-                    <input
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Password"
                         type="password"
-                        id="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
-                </div>
-
-                <button type="submit">Register</button>
-            </form>
-            <button onClick={() => navigate('/login')}>Login</button>
-        </div>
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Confirm Password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+                        <Button variant="contained" color="primary" type="submit">
+                            Sign Up
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => navigate('/login')}
+                        >
+                            Sign In
+                        </Button>
+                    </Box>
+                </form>
+            </Box>
+        </Box>
     );
 };
 

@@ -17,6 +17,8 @@ const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
 const locationRouter = require('./routes/locationRoutes');
 
+const {join} = require("node:path");
+
 const mongoDB = process.env.MONGO_URI;
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
@@ -41,6 +43,9 @@ app.use(session({
     }),
 }));
 
+// Avatar Middleware
+app.use(express.static(join(__dirname, 'public')));
+
 // Here you can add your routes
 app.use('/users', userRouter);
 app.use('/accounts', accountRouter);
@@ -59,7 +64,6 @@ app.use((err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err : {}
     });
 });
-
 
 
 // Start Server
