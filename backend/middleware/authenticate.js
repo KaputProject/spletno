@@ -13,7 +13,7 @@ module.exports = async (req, res, next) => {
 
         if (!user) return res.sendStatus(401);
 
-        const targetUserId = req.body.userId;
+        const targetUserId = req.body?.userId;
 
         if (user.isAdmin && targetUserId) {
             const targetUser = await UserModel.findById(targetUserId).select('-password');

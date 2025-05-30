@@ -1,6 +1,6 @@
 const TransactionModel = require('../models/transactionModel');
 const StatementModel = require('../models/statementModel');
-const PartnerModel = require('../models/locationModel');
+const LocationModel = require('../models/locationModel');
 const AccountModel = require('../models/accountModel');
 
 const { isOwner } = require('../utils/authorize');
@@ -17,6 +17,7 @@ module.exports = {
      */
     parse: async function (req, res) {
         try {
+            // TODO: Fix this to match the create
             const date = moment(req.body.date, 'DD.MM.YYYY').toDate();
             const statement = await StatementModel.findById( req.body.statementId ).populate('transactions');
 
@@ -55,13 +56,13 @@ module.exports = {
             let partner;
             if (req.body.outgoing) {
                 // Looks for a partner with the matching identifier AND owned by this user
-                partner = await PartnerModel.findOne({
+                partner = await LocationModel.findOne({
                     identifier: req.body.description,
                     user: req.user._id
                 });
             } else {
                 // If it is incoming checks the partner not the description
-                partner = await PartnerModel.findOne({
+                partner = await LocationModel.findOne({
                     identifier: req.body.partner,
                     user: req.user._id
                 });
@@ -183,7 +184,7 @@ module.exports = {
      */
     create: async function (req, res, next) {
         try {
-            const { datetime, account: accountId, description, change, outgoing, location } = req.body;
+            const { datetime, account: accountId, description, change, outgoing, location: locationId } = req.body;
 
             const date = new Date(datetime);
             const month = date.getMonth();
@@ -217,10 +218,19 @@ module.exports = {
                 account.save();
             }
 
+            let location = null;
+            if (locationId) {
+                // If a location is provided, check if it exists
+                location = await LocationModel.findOne({ _id: locationId });
+                if (!location) {
+                    return res.status(404).json({ message: 'Location not found' });
+                }
+            }
+
             const transaction = new TransactionModel({
                 user: req.user._id,
                 account: account,
-                location: location || null,
+                location: location?._id || null,
                 datetime: datetime,
                 description: description || null,
                 change: change,
@@ -235,6 +245,11 @@ module.exports = {
             await statement.save();
 
             // If the transaction has a location, the transaction is added to the location itself
+            if (location) {
+                transaction.outgoing ? location.total_spent += transaction.change : location.total_gained += transaction.change;
+                location.transactions.push(savedTransaction._id);
+                await location.save();
+            }
 
             return res.status(201).json({
                 message: 'Transaction created successfully',
