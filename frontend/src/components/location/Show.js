@@ -95,51 +95,58 @@ const LocationShow = () => {
                     boxShadow: 3,
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h4" fontWeight="bold">
                         {location.name}
                     </Typography>
-                    <ButtonGroup variant="outlined" aria-label="Location button group">
-                        <Button onClick={() => navigate('/locations')}>
-                            Back
-                        </Button>
-                        <Button onClick={() => navigate(`/locations/${id}/update`)}>
-                            Edit Location
-                        </Button>
-                        <Button color="error" onClick={handleDelete()}>
-                            Delete Location
-                        </Button>
+                    <ButtonGroup variant="outlined">
+                        <Button onClick={() => navigate('/locations')}>Back</Button>
+                        <Button onClick={() => navigate(`/locations/${id}/update`)}>Edit</Button>
+                        <Button color="error" onClick={handleDelete()}>Delete</Button>
                     </ButtonGroup>
                 </Box>
 
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Identifier:</strong> {location.identifier || 'N/A'}
-                </Typography>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Description:</strong> {location.description || 'N/A'}
-                </Typography>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    <strong>Address:</strong> {location.address || 'N/A'}
-                </Typography>
-                <Typography variant="subtitle1" sx={{ mb: 3 }}>
-                    <strong>Coordinates:</strong> {position.lat}, {position.lng}
-                </Typography>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" gutterBottom>Basic Info</Typography>
+                    <Typography><strong>Identifier:</strong> {location.identifier || 'N/A'}</Typography>
+                    <Typography><strong>Description:</strong> {location.description || 'N/A'}</Typography>
+                    <Typography><strong>Address:</strong> {location.address || 'N/A'}</Typography>
+                </Box>
 
-                {isLoaded && location.location?.coordinates ? (
-                    <Paper elevation={2} sx={{ overflow: 'hidden', borderRadius: 2 }}>
-                        <GoogleMap
-                            mapContainerStyle={mapContainerStyle}
-                            center={position}
-                            zoom={15}
-                        >
-                            <Marker position={position} />
-                        </GoogleMap>
-                    </Paper>
-                ) : (
-                    <Typography variant="body2" color="text.secondary">
-                        Map could not be loaded.
-                    </Typography>
-                )}
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" gutterBottom>Financials</Typography>
+                    <Typography><strong>Total Spent:</strong> €{location.total_spent?.toFixed(2) || 0}</Typography>
+                    <Typography><strong>Total Received:</strong> €{location.total_received?.toFixed(2) || 0}</Typography>
+                </Box>
+
+                <Box>
+                    {isLoaded && location.location?.coordinates ? (
+                        <>
+                            <Box sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                                <GoogleMap
+                                    mapContainerStyle={mapContainerStyle}
+                                    center={{ lat: location.lat, lng: location.lng }}
+                                    zoom={15}
+                                >
+                                    <Marker position={{ lat: location.lat, lng: location.lng }} />
+                                </GoogleMap>
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'left',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}
+                            >
+                                <Typography><strong>Latitude:</strong> {location.lat ?? 'N/A'}</Typography>
+                                <Typography><strong>Longitude:</strong> {location.lng ?? 'N/A'}</Typography>
+                            </Box>
+                        </>
+                        ) : (
+                        <Typography color="text.secondary">Map could not be loaded.</Typography>
+                    )}
+                </Box>
             </Box>
         </Box>
     );
