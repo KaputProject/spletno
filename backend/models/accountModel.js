@@ -1,26 +1,26 @@
-var mongoose = require('mongoose');
-var Schema   = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-var accountSchema = new Schema({
-	'user' : {
+const accountSchema = new Schema({
+	'user': {
 		type: Schema.Types.ObjectId,
 		ref: 'user'
 	},
-	'iban' : {
+	'iban': {
 		type: String,
 		index: true,
 		unique: true,
 	},
-	'currency' : {
+	'currency': {
 		type: String,
 		enum: ['EUR', 'USD', 'GBP'],
 		default: 'EUR'
 	},
-	'balance' : {
+	'balance': {
 		type: Number,
 		default: 0
 	},
-	'statements' : [{
+	'statements': [{
 		type: Schema.Types.ObjectId,
 		ref: 'statement'
 	}]

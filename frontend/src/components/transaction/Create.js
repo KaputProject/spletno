@@ -172,7 +172,7 @@ const TransactionCreate = () => {
                             value={form.change}
                             onChange={handleChange}
                             sx={{ mb: 3 }}
-                            inputProps={{ step: "0.01" }}
+                            inputProps={{ step: "0.01", min: "0" }}
                             required
                         />
                         <TextField

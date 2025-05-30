@@ -31,6 +31,11 @@ const AccountShow = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
+                const resT = await axios.get(`${URL}/transactions?account=${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setTransactions(resT.data.transactions);
                 setAccount(res.data.account);
                 setLoading(false);
             } catch (err) {
@@ -158,7 +163,7 @@ const AccountShow = () => {
                             </Button>
                         </Box>
 
-                        {transactions.length > 0 ? (
+                        {transactions ? (
                             <Paper elevation={2}>
                                 <List disablePadding>
                                     {transactions.map((tx) => (

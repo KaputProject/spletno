@@ -12,9 +12,9 @@ const transactionSchema = new Schema({
 		ref: 'account',
 		index: true
 	},
-	'partner': {
+	'location': {
 		type: Schema.Types.ObjectId,
-		ref: 'partner',
+		ref: 'location',
 		index: true
 	},
 
@@ -28,21 +28,14 @@ const transactionSchema = new Schema({
 	},
 	'change': {
 		type: Number,
-		default: 0
+		default: 0,
+		min: [0, 'Change amount must be a positive number']
 	},
 	'outgoing': {
 		type: Boolean,
 		default: true
 	},
-	'balanceAfter': {
-		type: Number,
-		default: 0
-	},
 
-	'partner_original': {
-		type: String,
-		default: null
-	},
 	'reference': {
 		type: Number,
 		default: null
