@@ -351,7 +351,7 @@ module.exports = {
                     transactions: 0,
                     in: 0,
                     out: 0,
-                    partners: {},
+                    locations: {},
                     statements: []
                 };
 
@@ -363,7 +363,7 @@ module.exports = {
                         in: stmt.inflow,
                         out: stmt.outflow,
                         balance: stmt.endBalance,
-                        partners: {}
+                        locations: {}
                     };
 
                     for (const txn of stmt.transactions) {
@@ -375,26 +375,26 @@ module.exports = {
                         if (partner) {
                             const key = partner._id.toString();
 
-                            if (!accStats.partners[key]) {
-                                accStats.partners[key] = {
+                            if (!accStats.locations[key]) {
+                                accStats.locations[key] = {
                                     name: partner.name,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
                             }
-                            if (!stmtStats.partners[key]) {
-                                stmtStats.partners[key] = {
+                            if (!stmtStats.locations[key]) {
+                                stmtStats.locations[key] = {
                                     name: partner.name,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
                             }
 
-                            accStats.partners[key].number_of_transactions += 1;
-                            accStats.partners[key].amount += txn.change;
+                            accStats.locations[key].number_of_transactions += 1;
+                            accStats.locations[key].amount += txn.change;
 
-                            stmtStats.partners[key].number_of_transactions += 1;
-                            stmtStats.partners[key].amount += txn.change;
+                            stmtStats.locations[key].number_of_transactions += 1;
+                            stmtStats.locations[key].amount += txn.change;
                         }
                     }
 
@@ -407,7 +407,7 @@ module.exports = {
             res.json({
                 user: {
                     name: user.name,
-                    partners: Object.values(partnerStats),
+                    locations: Object.values(partnerStats),
                     accounts
                 }
             });

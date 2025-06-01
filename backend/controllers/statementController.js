@@ -3,7 +3,10 @@ const { isOwner } = require('../utils/authorize');
 const moment = require('moment');
 const StatementModel = require("../models/statementModel");
 const transactionController = require('./transactionController');
-
+const UserModel = require('../models/userModel');
+const fs = require('fs');
+const FormData = require('form-data');
+const axios = require('axios');
 module.exports = {
     /**
      * statementController.parse()
@@ -189,6 +192,90 @@ module.exports = {
             });
         }
     },
+    /**
+     * Upload PDF datoteke in posredovanje na drug port/storitev
+     */
+
+    upload: async (req, res) => {
+        try {
+            console.log('Controller: datoteka =', req.file?.originalname);
+
+            if (!req.file) {
+                return res.status(400).json({ message: 'Datoteka ni bila priložena' });
+            }
+
+            const user = await UserModel.findById(req.user._id).populate('locations');
+            if (!user) {
+                return res.status(404).json({ message: 'Uporabnik ni najden' });
+            }
+
+            const fullName = `${user.surname} ${user.name}`.toUpperCase();
+
+            const partnerIdentifiers = Array.isArray(user.locations)
+                ? user.locations.map(p => p.identifier)
+                : [];
+
+            // forma za deployment
+            // const formData = new FormData();
+            // formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
+            // formData.append('name', fullName);
+            // formData.append('metadata', JSON.stringify(partnerIdentifiers));
+
+
+            //za testiranje
+            const formData = new FormData();
+            formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
+            const manualName = req.body.ime || 'KUDER LUKA';
+            const manualMetadata = req.body.metadata || JSON.stringify([
+                "LANA K.",
+                "UNIFITNES, D.O.O.",
+                "MDDSZ-DRZAVNE STIPENDIJE - ISCSD 2",
+                "ASPIRIA d.o.o.",
+                "HUMANITARNO DRUŠTVO LIONS KLUB KONJICE",
+                "PayPal Europe S.a.r.l. et Cie S.C.A",
+                "TELEKOM SLOVENIJE D.D."
+            ]);
+            formData.append('ime', manualName);
+            formData.append('metadata', manualMetadata);
+
+            console.log('Pošiljam podatke na Kotlin server...');
+
+            // Pošlji POST request na Kotlin server
+            const response = await axios.post('http://localhost:5001/upload', formData, {
+                headers: {
+                    ...formData.getHeaders(),
+                },
+                timeout: 10000, // opcijsko: timeout 10s
+            });
+
+            console.log('Odgovor Kotlin strežnika:', response.data);
+            console.log('Prve 3 transakcije:', JSON.stringify(response.data.statement.transactions.slice(0, 3), null, 2));
+
+            // Po uspešnem pošiljanju izbriši lokalno datoteko
+            try {
+                await fs.promises.unlink(req.file.path);
+                console.log('Začasna datoteka je bila uspešno izbrisana');
+            } catch (unlinkErr) {
+                console.error('Napaka pri brisanju začasne datoteke:', unlinkErr);
+            }
+            res.status(200).json({
+                message: 'Datoteka uspešno naložena in posredovana',
+                data: response.data,
+            });
+        } catch (error) {
+            if (error.response) {
+                console.error('Napaka iz Kotlin serverja:', error.response.status, error.response.data);
+            } else {
+                console.error('Napaka pri nalaganju datoteke:', error.message);
+            }
+            res.status(500).json({
+                message: 'Napaka pri nalaganju datoteke',
+                error: error.message,
+            });
+        }
+    },
+
+
 
     /**
      * statementController.update()
@@ -264,5 +351,5 @@ module.exports = {
                 error: err
             });
         }
-    }
+    },
 };

@@ -92,7 +92,7 @@ module.exports = {
             const savedPartner = await partner.save();
 
             // Here the partner is saved to the users table of partners
-            req.user.partners.push(savedPartner._id);
+            req.user.locations.push(savedPartner._id);
             await req.user.save();
 
             res.status(201).json({
@@ -207,7 +207,7 @@ module.exports = {
 
             res.json({
                 message: 'Nearby partners retrieved successfully',
-                partners: nearbyPartners
+                locations: nearbyPartners
             });
         } catch (err) {
             console.error(err);
