@@ -22,6 +22,7 @@ const StatementShow = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const fetchStatement = async () => {
@@ -59,6 +60,23 @@ const StatementShow = () => {
             </Box>
         );
 
+
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this statement?')) return;
+
+        setDeleting(true);
+        try {
+            await axios.delete(`${URL}/statements/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            navigate('/statements');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to delete statement.');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     if (!statement) return null;
 
     const formatDate = (dateStr) =>
@@ -89,7 +107,13 @@ const StatementShow = () => {
                     <ButtonGroup variant="outlined">
                         <Button onClick={() => navigate('/statements')}>Back</Button>
                         <Button onClick={() => navigate(`/statements/${id}/update`)}>Edit</Button>
+                        <Button color="error" onClick={handleDelete} disabled={deleting}>
+                            {deleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+
                     </ButtonGroup>
+
+
                 </Box>
 
                 <Divider sx={{ mb: 3 }} />

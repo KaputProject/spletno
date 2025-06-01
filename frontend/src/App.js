@@ -28,6 +28,7 @@ import LocationUpdate from './components/location/Update';
 
 import StatementCreate from './components/statement/Create';
 import StatementShow from "./components/statement/Show";
+import StatementUpdate from "./components/statement/Update";
 
 import TransactionList from './components/transaction/List';
 import TransactionCreate from './components/transaction/Create';
@@ -112,6 +113,7 @@ function App() {
                         <Route path="/transactions/:id" element={<TransactionShow />} />
 
                         <Route path="/statements/:id" element={<StatementShow />} />
+                        <Route path="/statements/:id/Update" element={<StatementUpdate />} />
 
                     </Routes>
                 </LoadScript>
