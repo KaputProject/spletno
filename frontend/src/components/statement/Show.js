@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import TransactionListItem from "../transaction/ListItem";
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -30,7 +31,6 @@ const StatementShow = () => {
                 });
                 setStatement(res.data.statement);
             } catch (err) {
-                console.error(err);
                 setError(err.response?.data?.message || 'Failed to load statement.');
             } finally {
                 setLoading(false);
@@ -86,7 +86,7 @@ const StatementShow = () => {
                     <Typography variant="h4" fontWeight="bold">
                         Statement Details
                     </Typography>
-                    <ButtonGroup variant="outlined" aria-label="statement actions">
+                    <ButtonGroup variant="outlined">
                         <Button onClick={() => navigate('/statements')}>Back</Button>
                         <Button onClick={() => navigate(`/statements/${id}/update`)}>Edit</Button>
                     </ButtonGroup>
@@ -94,91 +94,104 @@ const StatementShow = () => {
 
                 <Divider sx={{ mb: 3 }} />
 
-                {/* Basic Info */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        Statement Period
-                    </Typography>
-                    <Typography variant="body1">
-                        {formatDate(statement.startDate)} – {formatDate(statement.endDate)}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        Month / Year
-                    </Typography>
-                    <Typography variant="body1">
-                        {statement.month + 1} / {statement.year}
-                    </Typography>
-                </Box>
-
-                {/* Account and User Info */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        Account
-                    </Typography>
-                    {statement.account ? (
-                        <Link
-                            component="button"
-                            variant="body1"
-                            onClick={() => navigate(`/accounts/${statement.account._id}`)}
-                        >
-                            {statement.account.iban}
-                        </Link>
-                    ) : (
-                        <Typography variant="body1">N/A</Typography>
-                    )}
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        User
-                    </Typography>
-                    <Typography variant="body1">
-                        {statement.user?.username || 'N/A'}
-                    </Typography>
-                </Box>
-
-                {/* Financial Summary */}
-                <Box sx={{ mt: 3 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        Balances
-                    </Typography>
-                    <Typography variant="body1">
-                        Start: {statement.startBalance.toFixed(2)} €
-                    </Typography>
-                    <Typography variant="body1">
-                        End: {statement.endBalance.toFixed(2)} €
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                        Inflow / Outflow
-                    </Typography>
-                    <Typography variant="body1" color="success.main">
-                        Inflow: +{statement.inflow.toFixed(2)} €
-                    </Typography>
-                    <Typography variant="body1" color="error.main">
-                        Outflow: -{statement.outflow.toFixed(2)} €
-                    </Typography>
-                </Box>
-
-                {/* Transactions */}
-                {statement.transactions?.length > 0 && (
-                    <Box sx={{ mt: 3 }}>
-                        <Typography variant="subtitle2" color="text.secondary">
+                {/* Dva stolpca: levi za tranzakcije, desni za info */}
+                <Box sx={{ display: 'flex', gap: 4 }}>
+                    {/* Levi stolpec: TRANSAKCIJE */}
+                    <Box
+                        sx={{
+                            flex: 1,
+                            maxHeight: '500px',
+                            overflowY: 'auto',
+                            pr: 2,
+                            borderRight: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom>
                             Transactions
                         </Typography>
-                        {statement.transactions.map((tx) => (
-                            <Typography key={tx._id} variant="body2" sx={{ ml: 2 }}>
-                                • {tx.description || 'No description'} —{' '}
-                                {tx.change?.toFixed(2)} €
+                        {statement.transactions?.length > 0 ? (
+                            statement.transactions.map((tx) => (
+                                <TransactionListItem key={tx._id} transaction={tx} />
+                            ))
+                        ) : (
+                            <Typography variant="body2" color="text.secondary">
+                                No transactions found.
                             </Typography>
-                        ))}
+                        )}
                     </Box>
-                )}
+
+                    {/* Desni stolpec: INFO */}
+                    <Box sx={{ flex: 1.5 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                            Statement Period
+                        </Typography>
+                        <Typography variant="body1">
+                            {formatDate(statement.startDate)} – {formatDate(statement.endDate)}
+                        </Typography>
+
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Month / Year
+                            </Typography>
+                            <Typography variant="body1">
+                                {statement.month + 1} / {statement.year}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Account
+                            </Typography>
+                            {statement.account ? (
+                                <Link
+                                    component="button"
+                                    variant="body1"
+                                    onClick={() =>
+                                        navigate(`/accounts/${statement.account._id}`)
+                                    }
+                                >
+                                    {statement.account.iban}
+                                </Link>
+                            ) : (
+                                <Typography variant="body1">N/A</Typography>
+                            )}
+                        </Box>
+
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                User
+                            </Typography>
+                            <Typography variant="body1">
+                                {statement.user?.email || statement.user || 'N/A'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ mt: 3 }}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Balances
+                            </Typography>
+                            <Typography variant="body1">
+                                Start: {statement.startBalance.toFixed(2)} €
+                            </Typography>
+                            <Typography variant="body1">
+                                End: {statement.endBalance.toFixed(2)} €
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Inflow / Outflow
+                            </Typography>
+                            <Typography variant="body1" color="success.main">
+                                Inflow: +{statement.inflow.toFixed(2)} €
+                            </Typography>
+                            <Typography variant="body1" color="error.main">
+                                Outflow: -{statement.outflow.toFixed(2)} €
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
             </Paper>
         </Box>
     );
