@@ -1,10 +1,15 @@
 import React from 'react';
 import { ListItem, ListItemText, Typography, Divider } from '@mui/material';
-
+import { useNavigate } from 'react-router-dom';
 const StatementItem = ({ statement }) => {
+    const navigate = useNavigate();
+    const handleClick = () => {
+        navigate(`/statements/${statement._id}`);
+    };
+
     return (
         <>
-            <ListItem sx={{ py: 2, px: 3 }}>
+            <ListItem button onClick={handleClick} sx={{ py: 2, px: 3 }} >
                 <ListItemText
                     primary={
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>

@@ -106,9 +106,15 @@ module.exports = {
     show: async (req, res) => {
         try {
             const statement = await StatementModel.findById(req.params.id)
-                .populate('user', '--password')
+                .populate('user', '-password')
                 .populate('account')
-                .populate('transactions');
+                .populate({
+                    path: 'transactions',
+                    populate: {
+                        path: 'location',
+                    }
+                });
+
 
             if (!statement) {
                 return res.status(404).json({ message: 'Statement not found' });
@@ -130,6 +136,7 @@ module.exports = {
             });
         }
     },
+
 
     /**
      * statementController.create()
