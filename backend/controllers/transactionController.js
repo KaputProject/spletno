@@ -18,7 +18,9 @@ module.exports = {
      */
     parse: async function (data, iban, user) {
         try {
-            const date = new Date(data.datetime);
+            const momentDate = moment(data.date, "DD.MM.YYYY");
+            const date = momentDate.toDate();
+
             const month = date.getMonth();
             const year = date.getFullYear();
 
@@ -71,9 +73,9 @@ module.exports = {
 
             const transaction = new TransactionModel({
                 user: user._id,
-                account: account,
+                account: account._id,
                 location: location?._id || null,
-                datetime: data.datetime,
+                datetime: date,
                 description: data.description || null,
                 change: data.change,
                 outgoing: data.outgoing,

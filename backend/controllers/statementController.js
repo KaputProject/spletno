@@ -204,28 +204,12 @@ module.exports = {
                 ? user.locations.map(loc => loc.identifier)
                 : [];
 
-            console.log(locations)
-
             // Priprava podatkov za testni način
             const formData = new FormData();
             formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
 
-            // Ročni vnosi za testiranje
-            // const manualName = 'KUDER LUKA';
-            // const manualMetadata = JSON.stringify([
-            //     "LANA K.",
-            //     "UNIFITNES, D.O.O.",
-            //     "MDDSZ-DRZAVNE STIPENDIJE - ISCSD 2",
-            //     "ASPIRIA d.o.o.",
-            //     "HUMANITARNO DRUŠTVO LIONS KLUB KONJICE",
-            //     "PayPal Europe S.a.r.l. et Cie S.C.A",
-            //     "TELEKOM SLOVENIJE D.D."
-            // ]);
-
             formData.append('name', user.identifier);
             formData.append('metadata', JSON.stringify(locations));
-
-            console.log('Pošiljam podatke na Kotlin server...');
 
             // Pošlji POST zahtevek na Kotlin server
             const response = await axios.post('http://localhost:5001/upload', formData, {
@@ -235,10 +219,7 @@ module.exports = {
                 timeout: 10000, // 10 sekundni timeout
             });
 
-            console.log('Odgovor Kotlin strežnika:', response.data);
-
             const transactions = response.data.statement?.transactions || [];
-            //console.log('Prve 3 transakcije:', JSON.stringify(transactions.slice(0, 3), null, 2));
 
             // Po uspešnem pošiljanju izbriši lokalno datoteko
             try {
@@ -252,7 +233,7 @@ module.exports = {
             for (const transaction of transactions) {
                 try {
                     const result = await transactionController.parse(transaction, response.data.statement.iban, user);
-                    
+
                     if (result.transaction) {
                         parsedTransactions.push(result.transaction);
                     }
@@ -260,8 +241,6 @@ module.exports = {
                     console.error('Transaction parse failed:', err.message);
                 }
             }
-
-            console.log(parsedTransactions);
 
             // Vrni uspešen odgovor
             res.status(200).json({
