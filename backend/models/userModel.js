@@ -42,9 +42,9 @@ const userSchema = new Schema({
     },
 
     // Partners specific to the user
-    'partners': [{
+    'locations': [{
         type: Schema.Types.ObjectId,
-        ref: 'partner'
+        ref: 'location'
     }],
 });
 
