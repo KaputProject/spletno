@@ -268,7 +268,7 @@ const Home = () => {
                         Welcome to Kaput
                     </Typography>
                     <Typography sx={{ mt: 2, mb: 4 }}>
-                        Welcome to Kaput — the app that generously reminds you you’re terrible with money...
+                        Welcome to Kaput — the app that generously reminds you you’re terrible with money. Watch your pathetic spending habits mapped out in glorious detail, so you can admire how expertly you throw cash into the void. Bonus: Now with location tracking for all those genius purchases you barely remember making. Bravo, financial mastermind.
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
                         <Button variant="contained" color="primary" size="large" onClick={() => navigate('/login')}>
