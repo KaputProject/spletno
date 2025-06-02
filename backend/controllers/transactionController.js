@@ -11,68 +11,80 @@ module.exports = {
     /**
      * transactionController.parse()
      *
-     * @param req
-     * @param res
+     * @param data
+     * @param iban
+     * @param user
      * @returns {Promise<*>}
      */
-    parse: async function (req, res) {
+    parse: async function (data, iban, user) {
         try {
-            // TODO: Fix this to match the create
-            const date = moment(req.body.date, 'DD.MM.YYYY').toDate();
-            const statement = await StatementModel.findById( req.body.statementId ).populate('transactions');
+            const momentDate = moment(data.date, "DD.MM.YYYY");
+            const date = momentDate.toDate();
 
-            if (!statement) {
-                return res.status(404).json({
-                    message: `Account with ID: "${req.body.iban}" not found, please create it first.`
-                });
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            const account = await AccountModel.findOne({ iban: iban });
+            if (!account) {
+                return { message: 'Account not found' };
             }
 
-            if (!isOwner(statement, req.user)) {
-                return res.status(403).json({
-                    message: 'Forbidden: Not your statement'
-                });
-            }
-
-            // Check if a transaction with the same reference already exists
-            const duplicate = statement.transactions.find(t => t.reference === req.body.reference);
-            if (duplicate) {
-                return res.status(409).json({
-                    message: `Transaction with reference "${req.body.reference}" already exists in the statement.`
-                });
-            }
-
-            var transaction = new TransactionModel({
-                user: req.user._id,
-                statement: statement._id,
-                datetime: date,
-                reference: req.body.reference,
-                partner_original: req.body.partner,
-                description: req.body.description,
-                change: req.body.change,
-                balanceAfter: req.body.balance,
-                outgoing: req.body.outgoing,
+            // Checks if a statement(month), to which this transaction belongs to exists
+            let statement = await StatementModel.findOne({
+                account: account,
+                month: month,
+                year: year
             });
 
-            let partner;
-            if (req.body.outgoing) {
-                // Looks for a partner with the matching identifier AND owned by this user
-                partner = await LocationModel.findOne({
-                    identifier: req.body.description,
-                    user: req.user._id
+            // If not, a new one is created
+            if (!statement) {
+                statement = new StatementModel({
+                    user: user._id,
+                    account: account,
+                    month: month,
+                    year: year,
+                    startDate: new Date(year, month, 1),
+                    endDate: new Date(year, month + 1, 0)
                 });
-            } else {
-                // If it is incoming checks the partner not the description
-                partner = await LocationModel.findOne({
-                    identifier: req.body.partner,
-                    user: req.user._id
-                });
+                await statement.save();
+
+                account.statements.push(statement);
+                account.save();
             }
 
-            if (partner) {
-                transaction.known_partner = true;
-                transaction.partner_parsed = partner._id;
+            let location = null;
+            if (data.known_partner) {
+                // If a location is provided, check if it exists
+                location = await LocationModel.findOne({ user: user._id, identifier: data.partner });
+                if (!location) {
+                    return { message: 'Location not even though the data.known_partner is true found' };
+                }
             }
 
+            let original_location = null;
+            if (!data.known_partner) {
+                if (data.outgoing) {
+                    original_location = data.description
+                } else {
+                    original_location = data.partner;
+                }
+
+            }
+
+            const transaction = new TransactionModel({
+                user: user._id,
+                account: account._id,
+                location: location?._id || null,
+                datetime: date,
+                description: data.description || null,
+                change: data.change,
+                outgoing: data.outgoing,
+                statement: statement._id,
+                reference: data.reference,
+                original_location: original_location,
+            });
+
+            // TODO: Check for duplicates
             // TODO: Modify the partners total_spent and total_gained accordingly
 
             const savedTransaction = await transaction.save();
@@ -80,15 +92,25 @@ module.exports = {
             statement.transactions.push(savedTransaction._id);
             await statement.save();
 
-            return res.json({
+            if (location) {
+                location.transaction.push(savedTransaction._id);
+                if (savedTransaction.outgoing) {
+                    location.total_spent += savedTransaction.change;
+                } else {
+                    location.total_received += savedTransaction.change;
+                }
+                await location.save();
+            }
+
+            return {
                 message: 'Transaction parsed successfully',
                 transaction: savedTransaction
-            });
+            };
         } catch (err) {
-            return res.status(500).json({
+            return {
                 message: 'Error when parsing transaction.',
                 error: err
-            });
+            };
         }
     },
 
