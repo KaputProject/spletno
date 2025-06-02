@@ -1,88 +1,112 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import React, { useState, useRef } from 'react';
+import { Box, Button, Typography, Paper, CircularProgress } from '@mui/material';
 import axios from 'axios';
-import dayjs from 'dayjs';
-import {
-    Box,
-    Typography,
-    TextField,
-    Button,
-    Paper
-} from '@mui/material';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
-const StatementCreate = () => {
-    const { id: accountId } = useParams();
-    const navigate = useNavigate();
-    const token = localStorage.getItem('token');
+const PdfUpload = () => {
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const inputRef = useRef();
 
-    const [selectedMonth, setSelectedMonth] = useState(dayjs());
-    const [startBalance, setStartBalance] = useState('');
-    const [error, setError] = useState(null);
+    const handleFileClick = (e) => {
+        // Resetiraj input, da lahko uporabnik izbere isto datoteko večkrat zapored
+        e.target.value = null;
+    };
+
+    const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            await axios.post(`${URL}/statements`, {
-                accountId: accountId,
-                startBalance: parseFloat(startBalance),
-                month: selectedMonth.month(),
-                year: selectedMonth.year()
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+        if (!file) {
+            alert('Prosim izberi PDF datoteko.');
+            return;
+        }
 
-            navigate(`/accounts/${accountId}`);
+        if (file.type !== 'application/pdf') {
+            alert('Samo PDF datoteke so dovoljene.');
+            return;
+        }
+
+        // Preveri velikost datoteke (maksimalno 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Datoteka je prevelika (maksimalno 5MB).');
+            return;
+        }
+        const token = localStorage.getItem('token');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setUploading(true);
+        try {
+            const res = await axios.post(`${URL}/statements/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            console.log('Response from server:', res.data);
+            alert('Datoteka je bila uspešno naložena.');
+            setFile(null);
+            if (inputRef.current) {
+                inputRef.current.value = '';
+            }
         } catch (err) {
-            setError('Failed to create statement.');
+            console.error('Napaka pri nalaganju datoteke:', err);
+            alert(
+                err.response?.data?.message || 'Prišlo je do napake pri nalaganju datoteke.'
+            );
+        } finally {
+            setUploading(false);
         }
     };
 
     return (
-        <Box sx={{ mt: 2, px: 2 }}>
-            <Paper sx={{ p: 4, maxWidth: 600, mx: 'auto' }}>
-                <Typography variant="h5" sx={{ mb: 3 }}>
-                    Create Statement
+        <Box sx={{ maxWidth: 400, mx: 'auto', mt: 6 }}>
+            <Paper elevation={3} sx={{ p: 4 }}>
+                <Typography variant="h5" align="center" gutterBottom>
+                    Naloži PDF datoteko
                 </Typography>
-
-                {error && (
-                    <Typography color="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Typography>
-                )}
-
                 <form onSubmit={handleSubmit}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DatePicker
-                            views={['year', 'month']}
-                            label="Select Month"
-                            minDate={dayjs('2000-01-01')}
-                            maxDate={dayjs()}
-                            fullWidth
-                            sx={{ mb: 2 }}
-                            value={selectedMonth}
-                            onChange={(newValue) => setSelectedMonth(newValue)}
-                            renderInput={(params) => (
-                                <TextField fullWidth sx={{ mb: 2 }} {...params} />
-                            )}
-                        />
-                    </LocalizationProvider>
-
-                    <TextField
-                        label="Start Balance"
-                        type="number"
+                    <Button
+                        variant="outlined"
+                        component="label"
                         fullWidth
-                        value={startBalance}
-                        onChange={(e) => setStartBalance(e.target.value)}
-                        sx={{ mb: 2 }}
-                    />
+                        sx={{ mb: 2, py: 2 }}
+                        aria-label="Izberi PDF datoteko"
+                    >
+                        {file ? file.name : 'Izberi PDF datoteko'}
+                        <input
+                            hidden
+                            type="file"
+                            accept="application/pdf"
+                            onClick={handleFileClick}
+                            onChange={handleFileChange}
+                            ref={inputRef}
+                        />
+                    </Button>
 
-                    <Button type="submit" variant="contained" fullWidth>
-                        Save Statement
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        type="submit"
+                        fullWidth
+                        disabled={uploading}
+                        sx={{ py: 1.5 }}
+                        aria-label="Naloži PDF datoteko"
+                    >
+                        {uploading ? (
+                            <>
+                                <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
+                                Nalaganje...
+                            </>
+                        ) : (
+                            'Naloži'
+                        )}
                     </Button>
                 </form>
             </Paper>
@@ -90,4 +114,4 @@ const StatementCreate = () => {
     );
 };
 
-export default StatementCreate;
+export default PdfUpload;
