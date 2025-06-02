@@ -1,5 +1,5 @@
 const AccountModel = require('../models/accountModel');
-const { isOwner } = require('../utils/authorize');
+const {isOwner} = require('../utils/authorize');
 const moment = require('moment');
 const StatementModel = require("../models/statementModel");
 const transactionController = require('./transactionController');
@@ -17,9 +17,9 @@ module.exports = {
      */
     parse: async (req, res) => {
         try {
-            const account = await AccountModel.findOne({ iban: req.body.iban });
+            const account = await AccountModel.findOne({iban: req.body.iban});
             if (!account) {
-                return res.status(404).json({ message: `Account with IBAN: "${req.body.iban}" not found, please create it first.`});
+                return res.status(404).json({message: `Account with IBAN: "${req.body.iban}" not found, please create it first.`});
             }
 
             let startDate, endDate;
@@ -60,15 +60,13 @@ module.exports = {
             await account.save();
 
             res.status(201).json({
-                message: 'Statement parsed successfully',
-                statement: saved
+                message: 'Statement parsed successfully', statement: saved
             });
 
         } catch (err) {
             console.error('Error parsing statement:', err);
             res.status(500).json({
-                message: 'Error when parsing statement',
-                error: err
+                message: 'Error when parsing statement', error: err
             });
         }
     },
@@ -82,19 +80,17 @@ module.exports = {
      */
     list: async (req, res) => {
         try {
-            const statements = await StatementModel.find({ user: req.user._id })
+            const statements = await StatementModel.find({user: req.user._id})
                 .populate('user', '--password')
                 .populate('account');
 
             res.json({
-                message: 'Statements retrieved successfully',
-                statements: statements
+                message: 'Statements retrieved successfully', statements: statements
             });
         } catch (err) {
             console.error('Error retrieving statements:', err);
             res.status(500).json({
-                message: 'Error when getting statements',
-                error: err
+                message: 'Error when getting statements', error: err
             });
         }
     },
@@ -112,30 +108,27 @@ module.exports = {
                 .populate('user', '-password')
                 .populate('account')
                 .populate({
-                    path: 'transactions',
-                    populate: {
+                    path: 'transactions', populate: {
                         path: 'location',
                     }
                 });
 
 
             if (!statement) {
-                return res.status(404).json({ message: 'Statement not found' });
+                return res.status(404).json({message: 'Statement not found'});
             }
 
             if (!isOwner(statement, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: Not the statement owner' });
+                return res.status(403).json({message: 'Forbidden: Not the statement owner'});
             }
 
             res.json({
-                message: 'Statement details retrieved successfully',
-                statement: statement
+                message: 'Statement details retrieved successfully', statement: statement
             });
         } catch (err) {
             console.error('Error retrieving statement:', err);
             res.status(500).json({
-                message: 'Error when getting statement',
-                error: err
+                message: 'Error when getting statement', error: err
             });
         }
     },
@@ -150,11 +143,11 @@ module.exports = {
      */
     create: async (req, res) => {
         try {
-            const { accountId, transactions, inflow, outflow, startBalance, endBalance, month, year } = req.body;
+            const {accountId, transactions, inflow, outflow, startBalance, endBalance, month, year} = req.body;
 
             const account = await AccountModel.findById(accountId);
             if (!account) {
-                return res.status(404).json({ message: `Account with ID: "${req.body.account}" not found, please create it first.`});
+                return res.status(404).json({message: `Account with ID: "${req.body.account}" not found, please create it first.`});
             }
 
             const startDate = new Date(year, month, 1);
@@ -180,19 +173,16 @@ module.exports = {
             await account.save();
 
             res.status(201).json({
-                message: 'Statement saved successfully',
-                statement: saved
+                message: 'Statement saved successfully', statement: saved
             });
 
         } catch (err) {
             console.error('Error creating statement:', err);
             res.status(500).json({
-                message: 'Error when creating statement',
-                error: err
+                message: 'Error when creating statement', error: err
             });
         }
-    },
-    /**
+    }, /**
      * Upload PDF datoteke in posredovanje na drug port/storitev
      */
 
@@ -200,33 +190,29 @@ module.exports = {
         try {
             console.log('Controller: datoteka =', req.file?.originalname);
 
+            // Preveri, če je datoteka priložena
             if (!req.file) {
                 return res.status(400).json({ message: 'Datoteka ni bila priložena' });
             }
 
+            // Pridobi uporabnika in njegove lokacije
             const user = await UserModel.findById(req.user._id).populate('locations');
             if (!user) {
                 return res.status(404).json({ message: 'Uporabnik ni najden' });
             }
 
-            const fullName = `${user.surname} ${user.name}`.toUpperCase();
-
+            const fullName = user.identifier;
             const partnerIdentifiers = Array.isArray(user.locations)
-                ? user.locations.map(p => p.identifier)
+                ? user.locations.map(loc => loc.identifier)
                 : [];
 
-            // forma za deployment
-            // const formData = new FormData();
-            // formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
-            // formData.append('name', fullName);
-            // formData.append('metadata', JSON.stringify(partnerIdentifiers));
-
-
-            //za testiranje
+            // Priprava podatkov za testni način
             const formData = new FormData();
             formData.append('file', fs.createReadStream(req.file.path), req.file.originalname);
-            const manualName = req.body.ime || 'KUDER LUKA';
-            const manualMetadata = req.body.metadata || JSON.stringify([
+
+            // Ročni vnosi za testiranje
+            const manualName = 'KUDER LUKA';
+            const manualMetadata = JSON.stringify([
                 "LANA K.",
                 "UNIFITNES, D.O.O.",
                 "MDDSZ-DRZAVNE STIPENDIJE - ISCSD 2",
@@ -235,21 +221,24 @@ module.exports = {
                 "PayPal Europe S.a.r.l. et Cie S.C.A",
                 "TELEKOM SLOVENIJE D.D."
             ]);
-            formData.append('ime', manualName);
+
+            formData.append('name', manualName);
             formData.append('metadata', manualMetadata);
 
             console.log('Pošiljam podatke na Kotlin server...');
 
-            // Pošlji POST request na Kotlin server
+            // Pošlji POST zahtevek na Kotlin server
             const response = await axios.post('http://localhost:5001/upload', formData, {
                 headers: {
                     ...formData.getHeaders(),
                 },
-                timeout: 10000, // opcijsko: timeout 10s
+                timeout: 10000, // 10 sekundni timeout
             });
 
             console.log('Odgovor Kotlin strežnika:', response.data);
-            console.log('Prve 3 transakcije:', JSON.stringify(response.data.statement.transactions.slice(0, 3), null, 2));
+
+            const transactions = response.data.statement?.transactions || [];
+            console.log('Prve 3 transakcije:', JSON.stringify(transactions.slice(0, 3), null, 2));
 
             // Po uspešnem pošiljanju izbriši lokalno datoteko
             try {
@@ -258,16 +247,21 @@ module.exports = {
             } catch (unlinkErr) {
                 console.error('Napaka pri brisanju začasne datoteke:', unlinkErr);
             }
+
+            // Vrni uspešen odgovor
             res.status(200).json({
                 message: 'Datoteka uspešno naložena in posredovana',
                 data: response.data,
             });
+
         } catch (error) {
+            // Obdelava napak
             if (error.response) {
                 console.error('Napaka iz Kotlin serverja:', error.response.status, error.response.data);
             } else {
                 console.error('Napaka pri nalaganju datoteke:', error.message);
             }
+
             res.status(500).json({
                 message: 'Napaka pri nalaganju datoteke',
                 error: error.message,
@@ -288,11 +282,11 @@ module.exports = {
         try {
             const statement = await StatementModel.findById(req.params.id);
             if (!statement) {
-                return res.status(404).json({ message: 'Statement not found' });
+                return res.status(404).json({message: 'Statement not found'});
             }
 
             if (!isOwner(statement, req.user)) {
-                return res.status(403).json({ message: 'Forbidden: Not the statement owner' });
+                return res.status(403).json({message: 'Forbidden: Not the statement owner'});
             }
 
             statement.account = req.body.account ?? statement.account;
@@ -306,14 +300,12 @@ module.exports = {
 
             const updated = await statement.save();
             res.json({
-                message: 'Statement updated successfully',
-                statement: updated
+                message: 'Statement updated successfully', statement: updated
             });
         } catch (err) {
             console.log('Error updating statement:', err);
             res.status(500).json({
-                message: 'Error when updating statement',
-                error: err
+                message: 'Error when updating statement', error: err
             });
         }
     },
@@ -329,7 +321,7 @@ module.exports = {
         try {
             const statement = await StatementModel.findById(req.params.id);
             if (!statement) {
-                return res.status(404).json({ message: 'Statement not found' });
+                return res.status(404).json({message: 'Statement not found'});
             }
 
             // Remove transactions using controller
@@ -337,18 +329,21 @@ module.exports = {
                 for (const transactionId of statement.transactions) {
                     req.params.id = transactionId;
                     await transactionController.remove(req, {
-                        status: () => ({ json: () => {}, send: () => {} }) // dummy res
+                        status: () => ({
+                            json: () => {
+                            }, send: () => {
+                            }
+                        }) // dummy res
                     });
                 }
             }
 
             await statement.deleteOne();
 
-            return res.status(200).json({ message: 'Statement removed successfully' });
+            return res.status(200).json({message: 'Statement removed successfully'});
         } catch (err) {
             res.status(500).json({
-                message: 'Error when deleting statement',
-                error: err
+                message: 'Error when deleting statement', error: err
             });
         }
     },
