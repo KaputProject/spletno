@@ -6,6 +6,7 @@ const AccountController = require('./accountController');
 const LocationController = require('./locationController');
 const fs = require('fs');
 const path = require('path');
+const {toJSON} = require("express-session/session/cookie");
 
 /**
  * userController.js
@@ -302,8 +303,6 @@ module.exports = {
      */
     getUserStatistics: async function (req, res) {
         try {
-            console.log("getUserStatistics called with user:", req.user);
-
             const userId = req.params.id;
 
             if (req.user._id.toString() !== userId) {
@@ -385,8 +384,9 @@ module.exports = {
                     for (const txn of transactions) {
                         const location = txn.location;
                         accStats.transactions += 1;
-                        if (txn.change >= 0) accStats.in += txn.change;
-                        else accStats.out += Math.abs(txn.change);
+
+                        if (txn.outflow) accStats.out += txn.change;
+                        else accStats.in += txn.change;
 
                         if (location) {
                             const key = location._id.toString();

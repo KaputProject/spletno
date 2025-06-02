@@ -28,8 +28,8 @@ const Home = () => {
                             },
                         }
                     );
-                    console.log("Prejeti podatki:", response.data);
-                    setStats(response.data);
+                    console.log("Prejeti podatki:", response.data.user);
+                    setStats(response.data.user);
                 } catch (err) {
                     console.error("Napaka pri pridobivanju statistike:", err.response?.data || err.message);
                 }
@@ -328,8 +328,8 @@ const Home = () => {
         );
     }
 
-    // Ko so statistike na voljo
-    const { user: userData, accounts } = stats;
+    const accounts = stats.accounts || [];
+    console.log(accounts)
 
     // Skupni prihodki/odhodki vseh računov
     const totalIn = accounts.reduce((sum, acc) => sum + acc.in, 0);
@@ -439,7 +439,7 @@ const Home = () => {
                                         let max = 0;
                                         stats.accounts.forEach(acc => {
                                             acc.statements.forEach(stmt => {
-                                                stmt.partners.forEach(partner => {
+                                                stmt.locations.forEach(partner => {
                                                     if (Math.abs(partner.amount) > max) {
                                                         max = Math.abs(partner.amount);
                                                     }
