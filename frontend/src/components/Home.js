@@ -42,26 +42,26 @@ const Home = () => {
         if (stats && sankeyChartRef.current) {
             drawSankeyDiagram();
             drawBarChart();
-            drawPartnerPieChart();
+            drawLocationPieChart();
         }
     }, [stats]);
 
     const drawSankeyDiagram = () => {
-        if (!stats || !stats.accounts || !stats.user || !Array.isArray(stats.accounts) || !Array.isArray(stats.user.partners)) return;
+        if (!stats || !stats.accounts || !Array.isArray(stats.accounts) || !Array.isArray(stats.locations)) return;
 
         const data = {
             nodes: [],
             links: []
         };
 
-        // Ustvari unikate računov in partnerjev
+        // Ustvari unikate računov in lokacij
         const allNodes = [
             ...stats.accounts
                 .filter(acc => typeof acc.name === 'string') // zaščita
                 .map(acc => ({ name: acc.name, type: 'account' })),
-            ...stats.user.partners
+            ...stats.locations
                 .filter(p => typeof p.name === 'string') // zaščita
-                .map(p => ({ name: p.name, type: 'partner' }))
+                .map(p => ({ name: p.name, type: 'location' }))
         ];
 
         // Odstrani podvojene node po imenu
@@ -75,22 +75,32 @@ const Home = () => {
                 if (!stmt || !Array.isArray(stmt.transactions)) return;
 
                 stmt.transactions.forEach(txn => {
-                    if (!txn) return;
-
-                    const partner = txn.partner_parsed || txn.location;
-                    const partnerName = partner?.name;
+                    const location = txn.partner_parsed || txn.location;
+                    const locationName = location?.name;
                     const value = Number(txn.change);
 
-                    if (partnerName && acc.name && !isNaN(value) && value !== 0) {
+                    if (locationName && acc.name && !isNaN(value) && value !== 0) {
                         data.links.push({
                             source: acc.name,
-                            target: partnerName,
+                            target: locationName,
                             value: Math.abs(value)
                         });
                     }
                 });
             });
         });
+
+        // --- NOV DEL: pretvori source in target v indekse ---
+        const nodeNameToIndex = new Map(data.nodes.map((node, i) => [node.name, i]));
+
+        data.links = data.links
+            .filter(link => nodeNameToIndex.has(link.source) && nodeNameToIndex.has(link.target)) // odstrani neveljavne linke
+            .map(link => ({
+                source: nodeNameToIndex.get(link.source),
+                target: nodeNameToIndex.get(link.target),
+                value: link.value
+            }));
+        // -----------------------------------------------------
 
         const width = 600;
         const height = 400;
@@ -155,6 +165,7 @@ const Home = () => {
             .attr('text-anchor', 'start');
     };
 
+
     const drawBarChart = () => {
         if (!stats || !barChartRef.current) return;
 
@@ -217,18 +228,22 @@ const Home = () => {
             .text(d => d.in.toFixed(2) + ' €');
     };
 
-    const drawPartnerPieChart = (user, theme) => {
-        if (!user || !user.partners || user.partners.length === 0) return;
+    const drawLocationPieChart = (user) => {
+        if (!stats || !stats.locations || !Array.isArray(stats.locations) || stats.locations.length === 0) return;
 
-        const data = user.partners.map(p => ({ name: p.name, value: p.amount }));
+        const data = stats.locations
+            .filter(loc => typeof loc.amount === 'number' && loc.amount > 0)
+            .map(loc => ({ name: loc.name, value: loc.amount }));
+
+        console.log('Drawing pie chart with data:', data);
 
         const width = 400;
         const height = 400;
         const radius = Math.min(width, height) / 2;
 
-        d3.select('#partnerPieChart').selectAll('*').remove();
+        d3.select('#locationPieChart').selectAll('*').remove();
 
-        const svg = d3.select('#partnerPieChart')
+        const svg = d3.select('#locationPieChart')
             .append('svg')
             .attr('width', width)
             .attr('height', height)
@@ -254,7 +269,7 @@ const Home = () => {
             .join('path')
             .attr('d', arc)
             .attr('fill', d => color(d.data.name))
-            .attr('stroke', theme.palette.mode === 'dark' ? '#222' : '#fff')
+            .attr('stroke', '#fff')
             .style('stroke-width', '2px')
             .on('mouseover', function (event, d) {
                 d3.select(this).transition().duration(200).attr('d', arcHover);
@@ -271,10 +286,10 @@ const Home = () => {
             .attr('transform', d => `translate(${arc.centroid(d)})`)
             .style('text-anchor', 'middle')
             .style('font-size', '10px')
-            .style('fill', theme.palette.mode === 'dark' ? '#fff' : '#000');
+            .style('fill', '#000');
 
         // Legend
-        const legend = d3.select('#partnerPieChart')
+        const legend = d3.select('#locationPieChart')
             .append('div')
             .style('margin-top', '10px');
 
@@ -292,10 +307,11 @@ const Home = () => {
 
             item.append('span')
                 .text(`${d.name}: ${d.value.toFixed(2)} €`)
-                .style('color', theme.palette.mode === 'dark' ? '#fff' : '#000')
+                .style('color', '#000')
                 .style('font-size', '12px');
         });
     };
+
 
     // Če uporabnik ni prijavljen
     if (!user) {
@@ -305,7 +321,7 @@ const Home = () => {
                     Welcome to Kaput
                 </Typography>
                 <Typography sx={{ mt: 2, mb: 4 }}>
-                    Welcome to Kaput — the app that generously reminds you you’re terrible with money...
+                    Welcome to Kaput — the app that generously reminds you you’re terrible with money. Watch your pathetic spending habits mapped out in glorious detail, so you can admire how expertly you throw cash into the void. Bonus: Now with location tracking for all those genius purchases you barely remember making. Bravo, financial mastermind.
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
                     <Button variant="contained" color="primary" size="large" onClick={() => navigate('/login')}>
@@ -427,9 +443,9 @@ const Home = () => {
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
-                                <Typography variant="subtitle1" color="text.secondary">Number of Partners:</Typography>
+                                <Typography variant="subtitle1" color="text.secondary">Number of Locations:</Typography>
                                 <Typography variant="h6">
-                                    {Array.isArray(user.partners) ? user.partners.length : 0}
+                                    {Array.isArray(stats.locations) ? stats.locations.length : 0}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -439,9 +455,9 @@ const Home = () => {
                                         let max = 0;
                                         stats.accounts.forEach(acc => {
                                             acc.statements.forEach(stmt => {
-                                                stmt.locations.forEach(partner => {
-                                                    if (Math.abs(partner.amount) > max) {
-                                                        max = Math.abs(partner.amount);
+                                                stmt.locations.forEach(location => {
+                                                    if (Math.abs(location.amount) > max) {
+                                                        max = Math.abs(location.amount);
                                                     }
                                                 });
                                             });
@@ -490,16 +506,16 @@ const Home = () => {
 
                     <Paper sx={{ p: 4, mt: 4 }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                            Spending by Partners
+                            Spending by Locations
                         </Typography>
-                        <div id="partnerPieChart" style={{ width: 400, height: 400 }} />
+                        <div id="locationPieChart" style={{ width: 400, height: 400 }} />
                     </Paper>
 
-                    {/*
+
                     <Paper sx={{ p: 4, mt: 4 }}>
                         <pre>{JSON.stringify(stats, null, 2)}</pre>
                     </Paper>
-                    */}
+
                 </Box>
             )}
         </Box>

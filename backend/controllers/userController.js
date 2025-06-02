@@ -378,7 +378,8 @@ module.exports = {
                         in: stmt.inflow,
                         out: stmt.outflow,
                         balance: stmt.endBalance,
-                        locations: {}
+                        locations: {},
+                        transactions: []
                     };
 
                     for (const txn of transactions) {
@@ -387,6 +388,19 @@ module.exports = {
 
                         if (txn.outflow) accStats.out += txn.change;
                         else accStats.in += txn.change;
+
+                        stmtStats.transactions.push({
+                            _id: txn._id,
+                            date: txn.date,
+                            description: txn.description,
+                            change: txn.change,
+                            outflow: txn.outflow,
+                            location: location ? {
+                                _id: location._id,
+                                name: location.name,
+                                email: location.email || null
+                            } : null
+                        });
 
                         if (location) {
                             const key = location._id.toString();
