@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Typography, Box, Button, Avatar, Paper, Grid, Divider } from '@mui/material';
+import {Typography, Box, Button, Avatar, Paper, Grid, Divider, CircularProgress} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -42,6 +42,7 @@ const Home = () => {
         if (stats && sankeyChartRef.current) {
             drawSankeyDiagram();
             drawBarChart();
+            drawPartnerPieChart();
         }
     }, [stats]);
 
@@ -111,7 +112,7 @@ const Home = () => {
 
         graph.nodes.forEach((d, i) => {
             if ([d.x0, d.y0, d.x1, d.y1].some(v => typeof v !== 'number' || isNaN(v))) {
-                console.warn(`Node at index ${i} has invalid coords`, d);
+                //console.warn(`Node at index ${i} has invalid coords`, d);
             }
         });
 
@@ -184,7 +185,7 @@ const Home = () => {
             .attr('transform', `translate(0,${height})`)
             .call(d3.axisBottom(x))
             .selectAll("text")
-            .attr('transform', 'rotate(-40)')
+            //.attr('transform', 'rotate(-40)')
             .style('text-anchor', 'end');
 
         // Y os - vrednosti prihodkov
@@ -214,8 +215,90 @@ const Home = () => {
             .attr('x', d => x(d.name) + x.bandwidth() / 2)
             .attr('y', d => y(d.in) - 5)
             .attr('text-anchor', 'middle')
+            .attr('fill', '#008bff')
             .text(d => d.in.toFixed(2) + ' €');
     };
+
+    const drawPartnerPieChart = (user, theme) => {
+        if (!user || !user.partners || user.partners.length === 0) return;
+
+        const data = user.partners.map(p => ({ name: p.name, value: p.amount }));
+
+        const width = 400;
+        const height = 400;
+        const radius = Math.min(width, height) / 2;
+
+        d3.select('#partnerPieChart').selectAll('*').remove();
+
+        const svg = d3.select('#partnerPieChart')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+        const color = d3.scaleOrdinal(d3.schemeSet2);
+
+        const pie = d3.pie().value(d => d.value);
+        const data_ready = pie(data);
+
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        const arcHover = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius + 10);
+
+        // Pie slices
+        svg.selectAll('path')
+            .data(data_ready)
+            .join('path')
+            .attr('d', arc)
+            .attr('fill', d => color(d.data.name))
+            .attr('stroke', theme.palette.mode === 'dark' ? '#222' : '#fff')
+            .style('stroke-width', '2px')
+            .on('mouseover', function (event, d) {
+                d3.select(this).transition().duration(200).attr('d', arcHover);
+            })
+            .on('mouseout', function (event, d) {
+                d3.select(this).transition().duration(200).attr('d', arc);
+            });
+
+        // Labels
+        svg.selectAll('text')
+            .data(data_ready)
+            .join('text')
+            .text(d => `${d.data.name} (${d.data.value.toFixed(2)} €)`)
+            .attr('transform', d => `translate(${arc.centroid(d)})`)
+            .style('text-anchor', 'middle')
+            .style('font-size', '10px')
+            .style('fill', theme.palette.mode === 'dark' ? '#fff' : '#000');
+
+        // Legend
+        const legend = d3.select('#partnerPieChart')
+            .append('div')
+            .style('margin-top', '10px');
+
+        data.forEach((d, i) => {
+            const item = legend.append('div')
+                .style('display', 'flex')
+                .style('align-items', 'center')
+                .style('margin-bottom', '4px');
+
+            item.append('div')
+                .style('width', '12px')
+                .style('height', '12px')
+                .style('margin-right', '8px')
+                .style('background-color', color(d.name));
+
+            item.append('span')
+                .text(`${d.name}: ${d.value.toFixed(2)} €`)
+                .style('color', theme.palette.mode === 'dark' ? '#fff' : '#000')
+                .style('font-size', '12px');
+        });
+    };
+
 
 
     // Če uporabnik ni prijavljen
@@ -242,7 +325,11 @@ const Home = () => {
 
     // Če statistike še nalagajo
     if (!stats) {
-        return <Typography>Loading statistics...</Typography>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     // Ko so statistike na voljo
@@ -345,7 +432,9 @@ const Home = () => {
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography variant="subtitle1" color="text.secondary">Number of Partners:</Typography>
-                                <Typography variant="h6">{user.partners.length}</Typography>
+                                <Typography variant="h6">
+                                    {Array.isArray(user.partners) ? user.partners.length : 0}
+                                </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography variant="subtitle1" color="text.secondary">Biggest Transaction:</Typography>
@@ -404,8 +493,17 @@ const Home = () => {
                     </Paper>
 
                     <Paper sx={{ p: 4, mt: 4 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                            Spending by Partners
+                        </Typography>
+                        <div id="partnerPieChart" style={{ width: 400, height: 400 }} />
+                    </Paper>
+
+                    {/*
+                    <Paper sx={{ p: 4, mt: 4 }}>
                         <pre>{JSON.stringify(stats, null, 2)}</pre>
                     </Paper>
+                    */}
                 </Box>
             )}
         </Box>
