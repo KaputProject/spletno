@@ -155,8 +155,6 @@ const Home = () => {
             .attr('text-anchor', 'start');
     };
 
-
-
     const drawBarChart = () => {
         if (!stats || !barChartRef.current) return;
 
@@ -298,8 +296,6 @@ const Home = () => {
                 .style('font-size', '12px');
         });
     };
-
-
 
     // Če uporabnik ni prijavljen
     if (!user) {

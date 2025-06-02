@@ -302,6 +302,8 @@ module.exports = {
      */
     getUserStatistics: async function (req, res) {
         try {
+            console.log("getUserStatistics called with user:", req.user);
+
             const userId = req.params.id;
 
             if (req.user._id.toString() !== userId) {
@@ -322,33 +324,32 @@ module.exports = {
                     }
                 })
                 .populate({
-                    path: 'partners',
-                    model: 'location'
+                    path: 'locations',
                 });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
 
             // Statistika po partnerjih na ravni uporabnika
-            const partnerStats = {};
+            const locationStats = {};
 
             for (const acc of user.accounts || []) {
                 for (const stmt of acc.statements || []) {
                     const transactions = stmt.transactions || [];
                     for (const txn of transactions) {
-                        const partner = txn.location;
-                        if (partner) {
-                            const key = partner._id.toString();
-                            if (!partnerStats[key]) {
-                                partnerStats[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
+                        const location = txn.location;
+                        if (location) {
+                            const key = location._id.toString();
+                            if (!locationStats[key]) {
+                                locationStats[key] = {
+                                    _id: location._id,
+                                    name: location.name,
+                                    email: location.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
                             }
-                            partnerStats[key].number_of_transactions += 1;
-                            partnerStats[key].amount += txn.change;
+                            locationStats[key].number_of_transactions += 1;
+                            locationStats[key].amount += txn.change;
                         }
                     }
                 }
@@ -382,19 +383,19 @@ module.exports = {
                     };
 
                     for (const txn of transactions) {
-                        const partner = txn.partner_parsed;
+                        const location = txn.location;
                         accStats.transactions += 1;
                         if (txn.change >= 0) accStats.in += txn.change;
                         else accStats.out += Math.abs(txn.change);
 
-                        if (partner) {
-                            const key = partner._id.toString();
+                        if (location) {
+                            const key = location._id.toString();
 
                             if (!accStats.locations[key]) {
                                 accStats.locations[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
+                                    _id: location._id,
+                                    name: location.name,
+                                    email: location.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
@@ -402,9 +403,9 @@ module.exports = {
 
                             if (!stmtStats.locations[key]) {
                                 stmtStats.locations[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
+                                    _id: location._id,
+                                    name: location.name,
+                                    email: location.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
@@ -418,11 +419,11 @@ module.exports = {
                         }
                     }
 
-                    stmtStats.partners = Object.values(stmtStats.partners);
+                    stmtStats.locations = Object.values(stmtStats.locations);
                     accStats.statements.push(stmtStats);
                 }
 
-                accStats.partners = Object.values(accStats.partners);
+                accStats.locations = Object.values(accStats.locations);
                 accounts.push(accStats);
             }
 
@@ -435,7 +436,7 @@ module.exports = {
                     email: user.email,
                     dateOfBirth: user.dateOfBirth,
                     avatarUrl: user.avatarUrl,
-                    locations: Object.values(partnerStats),
+                    locations: Object.values(locationStats),
                     accounts
                 }
             });
