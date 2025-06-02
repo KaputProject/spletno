@@ -302,7 +302,13 @@ module.exports = {
      */
     getUserStatistics: async function (req, res) {
         try {
-            const user = await UserModel.findById(req.user._id)
+            const userId = req.params.id;
+
+            if (req.user._id.toString() !== userId) {
+                return res.status(403).json({ error: 'Ni dovoljenja za dostop do teh podatkov' });
+            }
+
+            const user = await UserModel.findById(userId)
                 .populate({
                     path: 'accounts',
                     populate: {
@@ -310,27 +316,33 @@ module.exports = {
                         populate: {
                             path: 'transactions',
                             populate: {
-                                path: 'partner_parsed'
+                                path: 'location'
                             }
                         }
                     }
                 })
-                .populate('partners');
+                .populate({
+                    path: 'partners',
+                    model: 'location'
+                });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
 
             // Statistika po partnerjih na ravni uporabnika
             const partnerStats = {};
 
-            for (const acc of user.accounts) {
-                for (const stmt of acc.statements) {
-                    for (const txn of stmt.transactions) {
-                        const partner = txn.partner_parsed;
+            for (const acc of user.accounts || []) {
+                for (const stmt of acc.statements || []) {
+                    const transactions = stmt.transactions || [];
+                    for (const txn of transactions) {
+                        const partner = txn.location;
                         if (partner) {
                             const key = partner._id.toString();
                             if (!partnerStats[key]) {
                                 partnerStats[key] = {
+                                    _id: partner._id,
                                     name: partner.name,
+                                    email: partner.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
@@ -342,10 +354,12 @@ module.exports = {
                 }
             }
 
-            // Statistika po računih in izpiskih
-            const accounts = {};
-            for (const acc of user.accounts) {
+            // Statistika po računih
+            const accounts = [];
+
+            for (const acc of user.accounts || []) {
                 const accStats = {
+                    _id: acc._id,
                     name: acc.iban,
                     balance: acc.balance,
                     transactions: 0,
@@ -355,18 +369,19 @@ module.exports = {
                     statements: []
                 };
 
-                for (const stmt of acc.statements) {
+                for (const stmt of acc.statements || []) {
+                    const transactions = stmt.transactions || [];
                     const stmtStats = {
                         month: stmt.month,
                         year: stmt.year,
-                        total_transactions: stmt.transactions.length,
+                        total_transactions: transactions.length,
                         in: stmt.inflow,
                         out: stmt.outflow,
                         balance: stmt.endBalance,
                         locations: {}
                     };
 
-                    for (const txn of stmt.transactions) {
+                    for (const txn of transactions) {
                         const partner = txn.partner_parsed;
                         accStats.transactions += 1;
                         if (txn.change >= 0) accStats.in += txn.change;
@@ -377,14 +392,19 @@ module.exports = {
 
                             if (!accStats.locations[key]) {
                                 accStats.locations[key] = {
+                                    _id: partner._id,
                                     name: partner.name,
+                                    email: partner.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
                             }
+
                             if (!stmtStats.locations[key]) {
                                 stmtStats.locations[key] = {
+                                    _id: partner._id,
                                     name: partner.name,
+                                    email: partner.email || null,
                                     number_of_transactions: 0,
                                     amount: 0
                                 };
@@ -398,22 +418,29 @@ module.exports = {
                         }
                     }
 
+                    stmtStats.partners = Object.values(stmtStats.partners);
                     accStats.statements.push(stmtStats);
                 }
 
-                accounts[acc._id.toString()] = accStats;
+                accStats.partners = Object.values(accStats.partners);
+                accounts.push(accStats);
             }
 
             res.json({
                 user: {
+                    _id: user._id,
                     name: user.name,
+                    surname: user.surname,
+                    username: user.username,
+                    email: user.email,
+                    dateOfBirth: user.dateOfBirth,
+                    avatarUrl: user.avatarUrl,
                     locations: Object.values(partnerStats),
                     accounts
                 }
             });
 
         } catch (err) {
-            console.error(err);
             console.error("Napaka v getUserStatistics:", err.message, err.stack);
             res.status(500).json({ error: 'Napaka pri pridobivanju statistike' });
         }
