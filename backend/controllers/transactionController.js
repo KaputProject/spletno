@@ -26,7 +26,7 @@ module.exports = {
 
             const account = await AccountModel.findOne({ iban: iban });
             if (!account) {
-                return { message: 'Account not found' };
+                throw Error('Account not found');
             }
 
             // Checks if a statement(month), to which this transaction belongs to exists
@@ -57,7 +57,7 @@ module.exports = {
                 // If a location is provided, check if it exists
                 location = await LocationModel.findOne({ user: user._id, identifier: data.partner });
                 if (!location) {
-                    return { message: 'Location not even though the data.known_partner is true found' };
+                    throw Error('Location not found even though known partner is filled');
                 }
             }
 
@@ -68,13 +68,12 @@ module.exports = {
                 } else {
                     original_location = data.partner;
                 }
-
             }
 
             const transaction = new TransactionModel({
                 user: user._id,
-                account: account._id,
-                location: location?._id || null,
+                account: account,
+                location: location || null,
                 datetime: date,
                 description: data.description || null,
                 change: data.change,
@@ -93,7 +92,7 @@ module.exports = {
             await statement.save();
 
             if (location) {
-                location.transaction.push(savedTransaction._id);
+                location.transactions.push(savedTransaction._id);
                 if (savedTransaction.outgoing) {
                     location.total_spent += savedTransaction.change;
                 } else {
@@ -107,6 +106,7 @@ module.exports = {
                 transaction: savedTransaction
             };
         } catch (err) {
+            console.log(err)
             return {
                 message: 'Error when parsing transaction.',
                 error: err
