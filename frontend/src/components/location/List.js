@@ -71,9 +71,21 @@ const LocationList = () => {
                     <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
                         Your Locations
                     </Typography>
-                    <Button variant="contained" onClick={() => navigate('/locations/create')}>
-                        Create Partner
-                    </Button>
+                    <Box>
+                        <Button
+                            variant="contained"
+                            onClick={() => navigate('/locations/create')}
+                            sx={{ mr: 1 }}
+                        >
+                            Create Partner
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => navigate('/locations/polygon-filter')}
+                        >
+                            Polygon Filter
+                        </Button>
+                    </Box>
                 </Box>
 
                 {locations.length === 0 ? (
