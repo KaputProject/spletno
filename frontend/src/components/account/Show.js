@@ -209,7 +209,7 @@ const AccountShow = () => {
                                 </Button>
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1 }}>
                                 <FormControl sx={{ minWidth: 120 }} size="small">
                                     <InputLabel id="location-filter-label">Location</InputLabel>
                                     <Select
