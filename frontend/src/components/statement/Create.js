@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Box, Button, Typography, Paper, CircularProgress } from '@mui/material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -8,6 +9,7 @@ const PdfUpload = () => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const inputRef = useRef();
+    const navigate = useNavigate();
 
     const handleFileClick = (e) => {
         // Resetiraj input, da lahko uporabnik izbere isto datoteko večkrat zapored
@@ -42,6 +44,7 @@ const PdfUpload = () => {
         formData.append('file', file);
 
         setUploading(true);
+
         try {
             const res = await axios.post(`${URL}/statements/upload`, formData, {
                 headers: {
@@ -49,9 +52,14 @@ const PdfUpload = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-            console.log('Response from server:', res.data);
+            //console.log('Response from server:', res.data);
             alert('Datoteka je bila uspešno naložena.');
             setFile(null);
+
+            navigate('/transactions/parsed', {
+                state: { transactions: res.data.transactions },
+            });
+
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
