@@ -5,11 +5,16 @@ import {
     Typography,
     Paper,
     List,
-    ListItem,
     CircularProgress,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TextField,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import TransactionListItem from "./ListItem";
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -17,6 +22,11 @@ const TransactionList = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [locationFilter, setLocationFilter] = useState('');
+    const [sortByChange, setSortByChange] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
@@ -38,6 +48,38 @@ const TransactionList = () => {
         fetchTransactions();
     }, [token]);
 
+    const filteredAndSortedTransactions = transactions
+        .filter((tx) =>
+            locationFilter ? tx.location?._id === locationFilter : true
+        )
+        .filter((tx) => {
+            const lowerQuery = searchQuery.toLowerCase();
+            const locationName = tx.location?.name?.toLowerCase() || '';
+            const description = tx.description?.toLowerCase() || '';
+            const original_location = tx.original_location?.toLowerCase() || '';
+            const changeStr = String(tx.change || '').toLowerCase();
+            return (
+                locationName.includes(lowerQuery) ||
+                description.includes(lowerQuery) ||
+                changeStr.includes(lowerQuery) ||
+                original_location.includes(lowerQuery)
+            );
+        })
+        .sort((a, b) => {
+            if (!sortByChange) return 0;
+            return sortByChange === 'asc'
+                ? a.change - b.change
+                : b.change - a.change;
+        });
+
+    const uniqueLocations = [
+        ...new Map(
+            transactions
+                .filter(tx => tx.location)
+                .map(tx => [tx.location._id, tx.location])
+        ).values(),
+    ];
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
@@ -55,11 +97,7 @@ const TransactionList = () => {
     }
 
     return (
-        <Box sx={{
-            width: '100%',
-            mt: 2,
-            px: 2 
-        }}>
+        <Box sx={{ width: '100%', mt: 2, px: 2 }}>
             <Box
                 sx={{
                     margin: '0 auto',
@@ -67,80 +105,78 @@ const TransactionList = () => {
                     borderRadius: 3,
                     backgroundColor: 'background.paper',
                     boxShadow: 4,
+                    maxWidth: 900,
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
                     <Typography variant="h4" fontWeight="bold">
                         Your Transactions
                     </Typography>
                     <Button
                         variant="contained"
+                        size="medium"
                         onClick={() => navigate('/transactions/create')}
                     >
                         New Transaction
                     </Button>
                 </Box>
 
-                {transactions.length === 0 ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        gap: 2,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        mb: 2,
+                    }}
+                >
+                    <FormControl sx={{ minWidth: 200 }} size="small">
+                        <InputLabel id="location-filter-label">Filter by Location</InputLabel>
+                        <Select
+                            labelId="location-filter-label"
+                            value={locationFilter}
+                            label="Filter by Location"
+                            onChange={(e) => setLocationFilter(e.target.value)}
+                        >
+                            <MenuItem value="">All Locations</MenuItem>
+                            {uniqueLocations.map((loc) => (
+                                <MenuItem key={loc._id} value={loc._id}>
+                                    {loc.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <TextField
+                        label="Search"
+                        variant="outlined"
+                        size="small"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ flexGrow: 1, minWidth: 240 }}
+                    />
+
+                    <Button
+                        variant="outlined"
+                        size="normal"
+                        onClick={() =>
+                            setSortByChange((prev) =>
+                                prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
+                            )
+                        }
+                    >
+                        Sort by Amount {sortByChange === 'asc' ? '↑' : sortByChange === 'desc' ? '↓' : ''}
+                    </Button>
+                </Box>
+
+                {filteredAndSortedTransactions.length === 0 ? (
                     <Typography>No transactions found.</Typography>
                 ) : (
-                    <Paper elevation={3}>
-                        <List>
-                            {transactions.map((tx) => {
-                                const amountColor = tx.outgoing ? 'error.main' : 'success.main';
-                                const sign = tx.outgoing ? '- ' : '+ ';
-                                const dateString = new Date(tx.datetime).toLocaleString();
-                                const locationName = tx.location?.name || 'Unknown Location';
-                                const currency = tx.account?.currency || '';
-                                const iban = tx.account?.iban || 'N/A';
-
-                                return (
-                                    <ListItem
-                                        key={tx._id}
-                                        divider
-                                        button
-                                        onClick={() => navigate(`/transactions/${tx._id}`)}
-                                        sx={{
-                                            flexDirection: 'column',
-                                            alignItems: 'flex-start',
-                                            py: 1.5,
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                            }}
-                                        >
-                                            <Typography
-                                                variant="subtitle1"
-                                                sx={{ color: amountColor, fontWeight: 'medium' }}
-                                            >
-                                                {locationName}: {sign}
-                                                {tx.change.toFixed(2)} {currency}
-                                            </Typography>
-
-                                            <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                                sx={{ fontFamily: 'monospace' }}
-                                            >
-                                                {iban}
-                                            </Typography>
-                                        </Box>
-
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ mt: 0.5 }}
-                                        >
-                                            {dateString}
-                                        </Typography>
-                                    </ListItem>
-                                );
-                            })}
+                    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden' }}>
+                        <List disablePadding>
+                            {filteredAndSortedTransactions.map((tx) => (
+                                <TransactionListItem key={tx._id} transaction={tx} />
+                            ))}
                         </List>
                     </Paper>
                 )}
