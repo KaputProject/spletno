@@ -78,7 +78,6 @@ const TransactionShow = () => {
         return date.toLocaleString();
     };
 
-
     if (loading) {
         return (
             <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
