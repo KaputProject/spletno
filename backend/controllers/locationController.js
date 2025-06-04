@@ -211,7 +211,10 @@ module.exports = {
             });
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
+            res.status(500).json({
+                message: 'Error when getting nearby locations.',
+                error: err
+            });
         }
     },
 
