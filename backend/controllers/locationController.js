@@ -211,7 +211,10 @@ module.exports = {
             });
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
+            res.status(500).json({
+                message: 'Error when getting nearby locations.',
+                error: err
+            });
         }
     },
 
@@ -225,6 +228,8 @@ module.exports = {
 
             const userId = req.user._id;
 
+            console.log('Received points:', points);
+
             // MongoDB pričakuje poligon, kjer je seznam koordinat sklenjen (prva točka == zadnja točka)
             const polygon = {
                 type: 'Polygon',
@@ -236,6 +241,8 @@ module.exports = {
                     [parseFloat(points[0].lng), parseFloat(points[0].lat)] // zaključimo poligon
                 ]]
             };
+
+            console.log('Parsed polygon:', polygon);
 
             const locations = await LocationModel.find({
                 user: userId,
