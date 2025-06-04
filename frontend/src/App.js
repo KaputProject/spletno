@@ -36,6 +36,7 @@ import TransactionShow from './components/transaction/Show';
 
 
 import { LoadScript } from '@react-google-maps/api';
+import PolygonFilter from "./components/location/PolygonFilter";
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
@@ -105,6 +106,7 @@ function App() {
 
                         <Route path="/locations" element={<LocationList />} />
                         <Route path="/locations/create" element={<LocationCreate />} />
+                        <Route path="/locations/polygon-filter" element={<PolygonFilter />} />
                         <Route path="/locations/:id" element={<LocationShow />} />
                         <Route path="/locations/:id/update" element={<LocationUpdate />} />
 

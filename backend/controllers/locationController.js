@@ -1,4 +1,4 @@
-const PartnerModel = require('../models/locationModel.js');
+const LocationModel = require('../models/locationModel.js');
 const { isOwner } = require('../utils/authorize.js');
 
 /**
@@ -16,7 +16,7 @@ module.exports = {
      */
     list: async (req, res) => {
         try {
-            const locations = await PartnerModel.find({ user: req.user._id }).populate('user');
+            const locations = await LocationModel.find({ user: req.user._id }).populate('user');
 
             res.json({
                 message: 'User locations retrieved successfully',
@@ -39,7 +39,7 @@ module.exports = {
      */
     show: async (req, res) => {
         try {
-            const partner = await PartnerModel.findById(req.params.id);
+            const partner = await LocationModel.findById(req.params.id);
 
             if (!partner) {
                 return res.status(404).json({ message: 'No such partner' });
@@ -70,7 +70,7 @@ module.exports = {
      */
     create: async (req, res) => {
         try {
-            const partner = new PartnerModel({
+            const partner = new LocationModel({
                 user: req.user._id,
                 name: req.body.name,
                 identifier: req.body.identifier,
@@ -116,7 +116,7 @@ module.exports = {
      */
     update: async (req, res) => {
         try {
-            const partner = await PartnerModel.findById(req.params.id);
+            const partner = await LocationModel.findById(req.params.id);
 
             if (!partner) {
                 return res.status(404).json({ message: 'No such partner' });
@@ -164,7 +164,7 @@ module.exports = {
      */
     remove: async (req, res) => {
         try {
-            const partner = await PartnerModel.findById(req.params.id);
+            const partner = await LocationModel.findById(req.params.id);
 
             if (!partner) {
                 return res.status(404).json({ message: 'No such partner' });
@@ -182,7 +182,7 @@ module.exports = {
         }
     },
 
-    findNearbyPartners: async (req, res) => {
+    findNearbyLocations: async (req, res) => {
         try {
             const { lng, lat, radius = 5000 } = req.query;
 
@@ -192,7 +192,7 @@ module.exports = {
 
             const userId = req.user._id;
 
-            const nearbyPartners = await PartnerModel.find({
+            const nearbyLocations = await LocationModel.find({
                 user: userId,
                 location: {
                     $near: {
@@ -206,12 +206,60 @@ module.exports = {
             });
 
             res.json({
-                message: 'Nearby partners retrieved successfully',
-                locations: nearbyPartners
+                message: 'Nearby locations retrieved successfully',
+                locations: nearbyLocations
             });
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: 'Napaka pri geo poizvedbi' });
+            res.status(500).json({
+                message: 'Error when getting nearby locations.',
+                error: err
+            });
+        }
+    },
+
+    findLocationsInPolygon: async (req, res) => {
+        try {
+            const { points } = req.body;
+
+            if (!points || !Array.isArray(points) || points.length !== 4) {
+                return res.status(400).json({ error: 'Točno 4 točke (kot array koordinat) so zahtevane.' });
+            }
+
+            const userId = req.user._id;
+
+            console.log('Received points:', points);
+
+            // MongoDB pričakuje poligon, kjer je seznam koordinat sklenjen (prva točka == zadnja točka)
+            const polygon = {
+                type: 'Polygon',
+                coordinates: [[
+                    [parseFloat(points[0].lng), parseFloat(points[0].lat)],
+                    [parseFloat(points[1].lng), parseFloat(points[1].lat)],
+                    [parseFloat(points[2].lng), parseFloat(points[2].lat)],
+                    [parseFloat(points[3].lng), parseFloat(points[3].lat)],
+                    [parseFloat(points[0].lng), parseFloat(points[0].lat)] // zaključimo poligon
+                ]]
+            };
+
+            console.log('Parsed polygon:', polygon);
+
+            const locations = await LocationModel.find({
+                user: userId,
+                location: {
+                    $geoWithin: {
+                        $geometry: polygon
+                    }
+                }
+            });
+
+            res.json({
+                message: 'Locations within polygon retrieved successfully',
+                locations: locations
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Napaka pri geo poizvedbi s poligonom' });
         }
     }
 };

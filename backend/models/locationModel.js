@@ -49,7 +49,7 @@ const locationSchema = new Schema({
 		},
 		coordinates: {
 			type: [Number], // [lng, lat]
-			index: '2dsphere'
+			//index: '2dsphere'
 		}
 	},
 	'icon': {
@@ -60,5 +60,7 @@ const locationSchema = new Schema({
 		ref: 'tag'
 	}]
 });
+
+locationSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('location', locationSchema);
