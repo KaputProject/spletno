@@ -39,6 +39,7 @@ const TransactionList = () => {
                 const res = await axios.get(`${URL}/transactions`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+
                 setTransactions(res.data.transactions);
             } catch (err) {
                 console.error(err);
@@ -55,7 +56,7 @@ const TransactionList = () => {
         ...new Map(
             transactions
                 .filter((tx) => tx.location)
-                .map((tx) => [tx.location._id, tx.location])
+                .map((tx) => [tx.location?._id, tx.location])
         ).values(),
     ];
 
@@ -215,9 +216,10 @@ const TransactionList = () => {
                         ) : (
                             <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden' }}>
                                 <List disablePadding>
-                                    {filteredAndSortedTransactions.map((tx) => (
-                                        <TransactionListItem key={tx._id} transaction={tx} />
-                                    ))}
+                                    {filteredAndSortedTransactions.map((tx, index) => {
+                                        if (!tx || !tx._id) return null;
+                                        return <TransactionListItem key={tx._id || index} transaction={tx} />;
+                                    })}
                                 </List>
                             </Paper>
                         )}
