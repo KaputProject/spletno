@@ -89,7 +89,7 @@ const TransactionListItem = ({ transaction }) => {
                         {dateString}
                     </Typography>
 
-                    {transaction.original_location && (
+                    {(transaction.original_location && !transaction.location) && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <Typography
                                 variant="caption"

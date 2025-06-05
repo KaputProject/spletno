@@ -86,6 +86,7 @@ module.exports = {
                 account: savedAccount
             });
         } catch (err) {
+            console.log(err)
             res.status(500).json({
                 message: 'Error when creating account',
                 error: err
