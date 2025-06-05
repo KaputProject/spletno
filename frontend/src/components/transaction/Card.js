@@ -9,9 +9,6 @@ import {
 
 const TransactionCard = ({ title, transaction }) => {
     const navigate = useNavigate();
-    const { _id, description, location, change, outgoing, original_location } = transaction;
-
-    const locationParsed = location ? location.name : ( outgoing ? description : original_location);
 
     if (!transaction) {
         return (
@@ -27,6 +24,10 @@ const TransactionCard = ({ title, transaction }) => {
             </Card>
         );
     }
+
+    const { _id, description, location, change, outgoing, original_location } = transaction;
+
+    const locationParsed = location ? location.name : ( outgoing ? description : original_location);
 
     return (
         <Box

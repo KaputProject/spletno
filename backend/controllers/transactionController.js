@@ -123,7 +123,7 @@ module.exports = {
      */
     list: async function (req, res) {
         try {
-            const account = req.params.account;
+            const account = req.query.account;
 
             let transactions = []
             if (!account) {

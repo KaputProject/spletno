@@ -9,6 +9,7 @@ import {
     Box,
     CircularProgress,
     ButtonGroup,
+    Grid, FormControl, InputLabel, Select, MenuItem, TextField
 } from '@mui/material';
 import StatementListItem from "../statement/ListItem";
 import TransactionListItem from "../transaction/ListItem";
@@ -22,7 +23,13 @@ const AccountShow = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+
     const [transactions, setTransactions] = useState([]);
+    const [locationFilter, setLocationFilter] = useState('');
+    const [sortByChange, setSortByChange] = useState(null);
+    const [sortByDate, setSortByDate] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
 
     useEffect(() => {
         const fetchAccount = async () => {
@@ -30,13 +37,13 @@ const AccountShow = () => {
                 const res = await axios.get(`${URL}/accounts/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                setAccount(res.data.account);
 
                 const resT = await axios.get(`${URL}/transactions?account=${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
                 setTransactions(resT.data.transactions);
-                setAccount(res.data.account);
+
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load account.');
@@ -59,6 +66,42 @@ const AccountShow = () => {
             }
         }
     }
+
+    const uniqueLocations = [
+        ...new Map(
+            transactions
+                .filter((tx) => tx.location)
+                .map((tx) => [tx.location._id, tx.location])
+        ).values(),
+    ];
+
+    const filteredAndSortedTransactions = transactions
+        .filter((tx) =>
+            locationFilter ? tx.location?._id === locationFilter : true
+        )
+        .filter((tx) => {
+            const lowerQuery = searchQuery.toLowerCase();
+            const locationName = tx.location?.name?.toLowerCase() || '';
+            const description = tx.description?.toLowerCase() || '';
+            const originalLocation = tx.original_location?.toLowerCase() || '';
+            const changeStr = String(tx.change || '').toLowerCase();
+            return (
+                locationName.includes(lowerQuery) ||
+                description.includes(lowerQuery) ||
+                changeStr.includes(lowerQuery) ||
+                originalLocation.includes(lowerQuery)
+            );
+        })
+        .sort((a, b) => {
+            if (sortByChange) {
+                return sortByChange === 'asc' ? a.change - b.change : b.change - a.change;
+            } else if (sortByDate) {
+                return sortByDate === 'asc'
+                    ? new Date(a.datetime) - new Date(b.datetime)
+                    : new Date(b.datetime) - new Date(a.datetime);
+            }
+            return 0;
+        });
 
     if (loading) {
         return (
@@ -125,59 +168,116 @@ const AccountShow = () => {
                     <strong>Balance:</strong> {account.balance.toFixed(2)}
                 </Typography>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6">Statements</Typography>
-                            <Button
-                                variant="contained"
-                                onClick={() => navigate(`/accounts/${id}/statements/create`)}
-                            >
-                                Add Statement
-                            </Button>
+                <Grid container spacing={4}>
+                    <Grid item size={4}>
+                        <Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6">Statements</Typography>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => navigate(`/accounts/${id}/statements/create`)}
+                                >
+                                    Add Statement
+                                </Button>
+                            </Box>
+
+                            {account.statements && account.statements.length > 0 ? (
+                                <Paper elevation={2}>
+                                    <List disablePadding>
+                                        {account.statements.map((statement) => (
+                                            <StatementListItem key={statement._id} statement={statement} />
+                                        ))}
+                                    </List>
+                                </Paper>
+                            ) : (
+                                <Typography variant="body2" color="textSecondary">
+                                    No statements found.
+                                </Typography>
+                            )}
                         </Box>
+                    </Grid>
 
-                        {account.statements && account.statements.length > 0 ? (
-                            <Paper elevation={2}>
-                                <List disablePadding>
-                                    {account.statements.map((statement) => (
-                                        <StatementListItem key={statement._id} statement={statement} />
-                                    ))}
-                                </List>
-                            </Paper>
-                        ) : (
-                            <Typography variant="body2" color="textSecondary">
-                                No statements found.
-                            </Typography>
-                        )}
-                    </Box>
+                    <Grid item size={8}>
+                        <Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6">Latest Transactions</Typography>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => navigate(`/transactions/create`)}
+                                >
+                                    Add Transaction
+                                </Button>
+                            </Box>
 
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6">Latest Transactions</Typography>
-                            <Button
-                                variant="contained"
-                                onClick={() => navigate(`/transactions/create`)}
-                            >
-                                Add Transaction
-                            </Button>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 1 }}>
+                                <FormControl sx={{ minWidth: 120 }} size="small">
+                                    <InputLabel id="location-filter-label">Location</InputLabel>
+                                    <Select
+                                        labelId="location-filter-label"
+                                        value={locationFilter}
+                                        label="Filter by Location"
+                                        onChange={(e) => setLocationFilter(e.target.value)}
+                                    >
+                                        <MenuItem value="">All Locations</MenuItem>
+                                        {uniqueLocations.map((loc) => (
+                                            <MenuItem key={loc._id} value={loc._id}>
+                                                {loc.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <TextField
+                                    label="Search"
+                                    variant="outlined"
+                                    size="small"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    sx={{ flexGrow: 1, minWidth: 160 }}
+                                />
+
+                                <Button
+                                    variant="outlined"
+                                    size="medium"
+                                    onClick={() =>
+                                        setSortByChange((prev) =>
+                                            prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
+                                        )
+                                    }
+                                >
+                                    Sort by Amount {sortByChange === 'asc' ? '↑' : sortByChange === 'desc' ? '↓' : ''}
+                                </Button>
+
+                                <Button
+                                    variant="outlined"
+                                    size="medium"
+                                    onClick={() =>
+                                        setSortByDate((prev) =>
+                                            prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
+                                        )
+                                    }
+                                >
+                                    Sort by Date {sortByDate === 'asc' ? '↑' : sortByDate === 'desc' ? '↓' : ''}
+                                </Button>
+                            </Box>
+
+
+                            {filteredAndSortedTransactions && filteredAndSortedTransactions.length > 0 ? (
+                                <Paper elevation={2}>
+                                    <List disablePadding>
+                                        {filteredAndSortedTransactions.map((tx) => (
+                                            <TransactionListItem key={tx._id} transaction={tx} />
+                                        ))}
+                                    </List>
+                                </Paper>
+                            ) : (
+                                <Typography variant="body2" color="textSecondary">
+                                    No transactions found.
+                                </Typography>
+                            )}
                         </Box>
-
-                        {transactions ? (
-                            <Paper elevation={2}>
-                                <List disablePadding>
-                                    {transactions.map((tx) => (
-                                        <TransactionListItem key={tx._id} transaction={tx} />
-                                    ))}
-                                </List>
-                            </Paper>
-                        ) : (
-                            <Typography variant="body2" color="textSecondary">
-                                No recent transactions.
-                            </Typography>
-                        )}
-                    </Box>
-                </Box>
+                    </Grid>
+                </Grid>
             </Box>
         </Box>
     );
