@@ -212,6 +212,13 @@ const TransactionShow = () => {
                         ) : (
                             <>
                                 <Typography variant="h6" gutterBottom>Location unknown</Typography>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => navigate('/locations/create', { state: { originalLocation: transaction.original_location } })}
+                                >
+                                    Create a new Location from "{transaction.original_location}"
+                                </Button>
                             </>
                         )}
                     </Grid>
