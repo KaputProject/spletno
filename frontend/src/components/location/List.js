@@ -66,6 +66,35 @@ const LocationList = () => {
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     });
 
+    // Tema za heatmap
+    const solidBackgroundStyle = [
+        {
+            featureType: 'landscape',
+            elementType: 'geometry',
+            stylers: [{ color: 'green' }]
+        },
+        {
+            featureType: 'water',
+            elementType: 'geometry',
+            stylers: [{ color: '#d1e0e0' }]
+        },
+        {
+            featureType: 'road',
+            elementType: 'geometry',
+            stylers: [{ color: '#ffffff' }]
+        },
+        {
+            featureType: 'poi',
+            elementType: 'geometry',
+            stylers: [{ color: '#e6e6e6' }]
+        },
+        {
+            featureType: 'transit',
+            elementType: 'geometry',
+            stylers: [{ color: '#dddddd' }]
+        }
+    ];
+
     useEffect(() => {
         const fetchPartners = async () => {
             try {
@@ -246,13 +275,13 @@ const LocationList = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', mt: 2, px: 2 }}>
+        <Box sx={{ width: '100%', height: '100vh', px: 2, py: 2 }}>
             <Box
                 sx={{
                     display: 'flex',
                     flexDirection: isSmallScreen ? 'column' : 'row',
                     gap: 2,
-                    height: isSmallScreen ? 'auto' : '600px',
+                    height: '100%',
                 }}
             >
                 {/* LEFT: MAP */}
@@ -263,6 +292,7 @@ const LocationList = () => {
                         borderRadius: 2,
                         overflow: 'hidden',
                         boxShadow: 3,
+                        position: 'relative', // Important for heatmap box positioning
                     }}
                 >
                     {isLoaded && (
@@ -273,8 +303,8 @@ const LocationList = () => {
                                 zoom={10}
                                 onClick={handleMapClick}
                                 onLoad={(map) => (mapRef.current = map)}
+                                options={{ styles: solidBackgroundStyle }}
                             >
-                                {/* Draw polygon if points exist */}
                                 {polygonPoints.length > 0 && (
                                     <Polygon
                                         paths={polygonPoints}
@@ -287,7 +317,6 @@ const LocationList = () => {
                                     />
                                 )}
 
-                                {/* Marker for selected nearby point */}
                                 {nearbyMode && nearbyPoint && (
                                     <Marker
                                         position={nearbyPoint}
@@ -298,7 +327,6 @@ const LocationList = () => {
                                     />
                                 )}
 
-                                {/* Markers for displayed locations */}
                                 {displayLocations.map((loc) =>
                                     loc.location ? (
                                         <Marker
@@ -329,9 +357,7 @@ const LocationList = () => {
                                             </Typography>
                                             <Button
                                                 size="small"
-                                                onClick={() =>
-                                                    navigate(`/locations/${selectedMarker._id}`)
-                                                }
+                                                onClick={() => navigate(`/locations/${selectedMarker._id}`)}
                                                 sx={{ mt: 1 }}
                                             >
                                                 View
@@ -340,57 +366,77 @@ const LocationList = () => {
                                     </InfoWindow>
                                 )}
                             </GoogleMap>
+
                             {showHeatmap && (
-                                <Box sx={{ mt: 2 }}>
-                                    <Typography variant="body2">Filter Heatmap by Month</Typography>
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 60,
+                                        left: 10,
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                        padding: 2,
+                                        borderRadius: 2,
+                                        boxShadow: 3,
+                                        zIndex: 10,
+                                        width: 300,
+                                    }}
+                                >
+                                    <Typography variant="body2" fontWeight="bold">
+                                        {selectedMonth
+                                            ? `Month: ${new Date(0, selectedMonth - 1).toLocaleString('default', {
+                                                month: 'long',
+                                            })}`
+                                            : 'All months'}
+                                    </Typography>
                                     <Slider
                                         value={selectedMonth || 0}
                                         min={0}
                                         max={12}
                                         step={1}
                                         marks={[
-                                            { value: 0, label: 'All' },
-                                            { value: 1, label: 'Jan' },
-                                            { value: 2, label: 'Feb' },
-                                            { value: 3, label: 'Mar' },
-                                            { value: 4, label: 'Apr' },
-                                            { value: 5, label: 'May' },
-                                            { value: 6, label: 'Jun' },
-                                            { value: 7, label: 'Jul' },
-                                            { value: 8, label: 'Aug' },
-                                            { value: 9, label: 'Sep' },
-                                            { value: 10, label: 'Oct' },
-                                            { value: 11, label: 'Nov' },
-                                            { value: 12, label: 'Dec' },
+                                            { value: 0 },
+                                            { value: 1 },
+                                            { value: 2 },
+                                            { value: 3 },
+                                            { value: 4 },
+                                            { value: 5 },
+                                            { value: 6 },
+                                            { value: 7 },
+                                            { value: 8 },
+                                            { value: 9 },
+                                            { value: 10 },
+                                            { value: 11 },
+                                            { value: 12 },
                                         ]}
-                                        valueLabelDisplay="auto"
+                                        valueLabelDisplay={'off'}
                                         onChange={(_, val) => setSelectedMonth(val === 0 ? null : val)}
                                     />
-                                    <Typography variant="caption">
-                                        {selectedMonth
-                                            ? `Month: ${new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })}`
-                                            : 'All months'}
-                                    </Typography>
 
-                                    <Typography variant="body2" sx={{ mt: 2 }}>Filter Heatmap by Year</Typography>
+                                    <Typography variant="body2" fontWeight="bold" sx={{ mt: 1 }}>
+                                        {selectedYear ? `Year: ${selectedYear}` : 'All years'}
+                                    </Typography>
                                     <Slider
                                         value={selectedYear || 0}
-                                        min={2000}
+                                        min={1999}
                                         max={new Date().getFullYear()}
                                         step={1}
                                         marks={[
-                                            { value: 0, label: 'All' },
+                                            { value: 1999 },
+                                            ...Array.from(
+                                                { length: new Date().getFullYear() - 1999 },
+                                                (_, i) => {
+                                                    const year = 2000 + i;
+                                                    return { value: year };
+                                                }
+                                            ),
                                         ]}
-                                        valueLabelDisplay="auto"
-                                        onChange={(_, val) => setSelectedYear(val === 0 ? null : val)}
+                                        onChange={(_, val) => setSelectedYear(val === 1999 ? null : val)}
+                                        valueLabelDisplay={'off'}
                                     />
-                                    <Typography variant="caption">
-                                        {selectedYear ? `Year: ${selectedYear}` : 'All years'}
-                                    </Typography>
                                 </Box>
                             )}
-                            </>
-                        )}
+                        </>
+                    )}
                 </Box>
 
                 {/* RIGHT: LIST + BUTTONS */}
@@ -399,16 +445,19 @@ const LocationList = () => {
                         flex: 1,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        maxHeight: '100%',
+                        overflow: 'hidden',
                     }}
                 >
                     <Box
                         sx={{
+                            flex: 1,
                             p: 3,
                             backgroundColor: 'background.paper',
                             borderRadius: 2,
                             boxShadow: 3,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
                         }}
                     >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -427,8 +476,7 @@ const LocationList = () => {
                             disabled={polygonMode || nearbyMode}
                         />
 
-                        {/* Filter controls */}
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                             <Button
                                 variant={polygonMode ? 'contained' : 'outlined'}
                                 onClick={() => {
@@ -477,30 +525,26 @@ const LocationList = () => {
                                     Search Nearby
                                 </Button>
                             )}
-
                             <Button
                                 variant={showHeatmap ? 'contained' : 'outlined'}
-                                onClick={() => setShowHeatmap(prev => !prev)}
+                                onClick={() => setShowHeatmap((prev) => !prev)}
                             >
                                 {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
                             </Button>
                         </Box>
 
-                        {/* Error message for both search methods */}
                         {(polygonMode || nearbyMode) && searchError && (
                             <Typography color="error" sx={{ mb: 1 }}>
                                 {searchError}
                             </Typography>
                         )}
 
-                        {/* Polygon search instruction */}
                         {polygonMode && (
                             <Typography sx={{ mb: 1 }}>
                                 Click on the map to select four points. The area inside the polygon will be used for the search.
                             </Typography>
                         )}
 
-                        {/* Nearby search controls and instruction */}
                         {nearbyMode && (
                             <Box sx={{ mb: 2 }}>
                                 <Typography>
@@ -525,72 +569,73 @@ const LocationList = () => {
                             </Box>
                         )}
 
-                        {/* Results */}
-                        {polygonMode && polygonSearched && polygonResults.length === 0 ? (
-                            <>
-                                <Typography>No locations found in polygon.</Typography>
-                                <Paper elevation={2} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText primary="None" />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </>
-                        ) : nearbyMode && nearbySearched && nearbyResults.length === 0 ? (
-                            <>
-                                <Typography>No locations found nearby.</Typography>
-                                <Paper elevation={2} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText primary="None" />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </>
-                        ) : displayLocations.length === 0 ? (
-                            <>
-                                <Typography>No locations match the filter.</Typography>
-                                <Paper elevation={2} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                    <List>
-                                        <ListItem>
-                                            <ListItemText primary="None" />
-                                        </ListItem>
-                                    </List>
-                                </Paper>
-                            </>
-                        ) : (
-                            <Fade in={true}>
-                                <Paper elevation={2} sx={{ maxHeight: 400, overflowY: 'auto' }}>
-                                    <List>
-                                        {displayLocations.map((location) => (
-                                            <ListItem
-                                                key={location._id}
-                                                divider
-                                                button
-                                                onClick={() => navigate(`/locations/${location._id}`)}
-                                                onMouseEnter={() => setSelectedMarker(location)}
-                                                onMouseLeave={() => setSelectedMarker(null)}
-                                                sx={{ transition: 'background-color 0.3s', '&:hover': { backgroundColor: '#f5f5f5' } }}
-                                            >
-                                                <ListItemText
-                                                    primary={location.name || 'Unnamed location'}
-                                                    secondary={
-                                                        location.address || 'No address available'
-                                                    }
-                                                />
+                        <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                            {polygonMode && polygonSearched && polygonResults.length === 0 ? (
+                                <>
+                                    <Typography>No locations found in polygon.</Typography>
+                                    <Paper elevation={2}>
+                                        <List>
+                                            <ListItem>
+                                                <ListItemText primary="None" />
                                             </ListItem>
-                                        ))}
-                                    </List>
-                                </Paper>
-                            </Fade>
-                        )}
+                                        </List>
+                                    </Paper>
+                                </>
+                            ) : nearbyMode && nearbySearched && nearbyResults.length === 0 ? (
+                                <>
+                                    <Typography>No locations found nearby.</Typography>
+                                    <Paper elevation={2}>
+                                        <List>
+                                            <ListItem>
+                                                <ListItemText primary="None" />
+                                            </ListItem>
+                                        </List>
+                                    </Paper>
+                                </>
+                            ) : displayLocations.length === 0 ? (
+                                <>
+                                    <Typography>No locations match the filter.</Typography>
+                                    <Paper elevation={2}>
+                                        <List>
+                                            <ListItem>
+                                                <ListItemText primary="None" />
+                                            </ListItem>
+                                        </List>
+                                    </Paper>
+                                </>
+                            ) : (
+                                <Fade in={true}>
+                                    <Paper elevation={2}>
+                                        <List>
+                                            {displayLocations.map((location) => (
+                                                <ListItem
+                                                    key={location._id}
+                                                    divider
+                                                    button
+                                                    onClick={() => navigate(`/locations/${location._id}`)}
+                                                    onMouseEnter={() => setSelectedMarker(location)}
+                                                    onMouseLeave={() => setSelectedMarker(null)}
+                                                    sx={{
+                                                        transition: 'background-color 0.3s',
+                                                        '&:hover': { backgroundColor: '#f5f5f5' },
+                                                    }}
+                                                >
+                                                    <ListItemText
+                                                        primary={location.name || 'Unnamed location'}
+                                                        secondary={location.address || 'No address available'}
+                                                    />
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </Paper>
+                                </Fade>
+                            )}
+                        </Box>
 
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                             <Button
                                 variant="contained"
                                 onClick={() => navigate('/locations/create')}
-                                sx={{ mr: 1 }}
                                 disabled={polygonMode || nearbyMode}
                             >
                                 Create Location
