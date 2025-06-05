@@ -45,7 +45,7 @@ const LocationShow = () => {
     const handleDelete = () => async () => {
         if (window.confirm('Are you sure you want to delete this location?')) {
             try {
-                await axios.delete(`${URL}/partners/${id}`, {
+                await axios.delete(`${URL}/locations/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 

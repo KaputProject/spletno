@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -7,6 +7,7 @@ import {
     Paper
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 import {
@@ -27,12 +28,15 @@ const mapContainerStyle = {
 const LocationCreate = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+    const locationState = useLocation();
+    const originalLocation = locationState?.state?.originalLocation;
+    const [searchInput, setSearchInput] = useState(originalLocation || '');
 
     const [form, setForm] = useState({
-        name: '',
-        identifier: '',
+        name: originalLocation || '',
+        identifier: originalLocation || '',
         description: '',
-        address: '',
+        address: originalLocation || '',
         lat: null,
         lng: null,
         icon: '',
@@ -52,6 +56,8 @@ const LocationCreate = () => {
             const lat = place.geometry.location.lat();
             const lng = place.geometry.location.lng();
             const address = place.formatted_address;
+
+            setSearchInput(address)
 
             setForm((prev) => ({ ...prev, lat, lng, address }));
             setMarker({ lat, lng });
@@ -103,6 +109,12 @@ const LocationCreate = () => {
             console.error('Failed to create partner:', err);
         }
     };
+
+    useEffect(() => {
+        if (originalLocation && autocompleteRef.current) {
+            setSearchInput(originalLocation);
+        }
+    }, [originalLocation, autocompleteRef]);
 
     return (
         <Box sx={{ width: '100%', mt: 2, px: 2 }}>
@@ -165,6 +177,8 @@ const LocationCreate = () => {
                                     fullWidth
                                     label="Search Address"
                                     variant="outlined"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
                                     required
                                 />
                             </Autocomplete>
