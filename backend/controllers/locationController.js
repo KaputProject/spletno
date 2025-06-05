@@ -1,4 +1,5 @@
 const LocationModel = require('../models/locationModel.js');
+const TransactionModel = require('../models/transactionModel.js');
 const { isOwner } = require('../utils/authorize.js');
 
 /**
@@ -76,6 +77,7 @@ module.exports = {
                 identifier: req.body.identifier,
                 description: req.body.description,
                 total_spent: 0,
+                total_received: 0,
                 address: req.body.address,
                 lat: req.body.lat,
                 lng: req.body.lng,
@@ -83,15 +85,45 @@ module.exports = {
                     type: 'Point',
                     coordinates: [req.body.lng, req.body.lat]
                 },
-
-                // TODO: Make a default icon
                 icon: "default.png",
-                tags: req.body.tags || []
+                tags: req.body.tags || [],
+                transactions: []
             });
 
             const savedPartner = await partner.save();
 
-            // Here the partner is saved to the users table of partners
+            const unassociatedTransactions = await TransactionModel.find({
+                user: req.user._id,
+                location: null,
+                original_location: savedPartner.identifier
+            });
+
+            const transactionIds = unassociatedTransactions.map(tx => tx._id);
+
+            // Update each transaction's location
+            await TransactionModel.updateMany(
+                { _id: { $in: transactionIds } },
+                { $set: { location: savedPartner._id } }
+            );
+
+            // Sum total_spent and total_received
+            let totalSpent = 0;
+            let totalReceived = 0;
+
+            for (const tx of unassociatedTransactions) {
+                if (tx.outgoing) {
+                    totalSpent += tx.change;
+                } else {
+                    totalReceived += tx.change;
+                }
+            }
+
+            // Assign the updated values and transactions to the saved partner
+            savedPartner.transactions = transactionIds;
+            savedPartner.total_spent = totalSpent;
+            savedPartner.total_received = totalReceived;
+            await savedPartner.save();
+
             req.user.locations.push(savedPartner._id);
             await req.user.save();
 
@@ -100,6 +132,7 @@ module.exports = {
                 partner: savedPartner
             });
         } catch (err) {
+            console.log(err)
             res.status(500).json({
                 message: 'Error when creating partner.',
                 error: err
