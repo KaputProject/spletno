@@ -59,6 +59,8 @@ const LocationList = () => {
 
     const [showHeatmap, setShowHeatmap] = useState(false);
     const heatmapLayerRef = useRef(null);
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -179,14 +181,26 @@ const LocationList = () => {
     if (nearbyMode && nearbyResults.length > 0) displayLocations = nearbyResults;
 
     const heatmapData = displayLocations
-        .filter(loc => loc.location && (loc.total_spent != null || loc.total_received != null))
-        .map(loc => ({
-            location: new window.google.maps.LatLng(
-                loc.location.coordinates[1],
-                loc.location.coordinates[0]
-            ),
-            weight: (loc.total_spent || 0) + (loc.total_received || 0),
-        }));
+        .filter(loc => loc.location && Array.isArray(loc.transactions))
+        .map(loc => {
+            const filteredTransactions = loc.transactions.filter(tx => {
+                const txDate = new Date(tx.datetime);
+                const matchesMonth = !selectedMonth || (txDate.getMonth() + 1 === selectedMonth);
+                const matchesYear = !selectedYear || (txDate.getFullYear() === selectedYear);
+                return matchesMonth && matchesYear;
+            });
+
+            const weight = filteredTransactions.reduce((sum, tx) => sum + (tx.change || 0), 0);
+
+            return {
+                location: new window.google.maps.LatLng(
+                    loc.location.coordinates[1],
+                    loc.location.coordinates[0]
+                ),
+                weight,
+            };
+        })
+        .filter(item => item.weight > 0);
 
     useEffect(() => {
         if (!isLoaded || !mapRef.current) return;
@@ -252,80 +266,131 @@ const LocationList = () => {
                     }}
                 >
                     {isLoaded && (
-                        <GoogleMap
-                            mapContainerStyle={mapContainerStyle}
-                            center={defaultCenter}
-                            zoom={10}
-                            onClick={handleMapClick}
-                            onLoad={(map) => (mapRef.current = map)}
-                        >
-                            {/* Draw polygon if points exist */}
-                            {polygonPoints.length > 0 && (
-                                <Polygon
-                                    paths={polygonPoints}
-                                    options={{
-                                        fillColor: 'lightblue',
-                                        strokeColor: 'blue',
-                                        fillOpacity: 0.4,
-                                        strokeWeight: 2,
-                                    }}
-                                />
-                            )}
-
-                            {/* Marker for selected nearby point */}
-                            {nearbyMode && nearbyPoint && (
-                                <Marker
-                                    position={nearbyPoint}
-                                    icon={{
-                                        url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-                                        scaledSize: new window.google.maps.Size(40, 40),
-                                    }}
-                                />
-                            )}
-
-                            {/* Markers for displayed locations */}
-                            {displayLocations.map((loc) =>
-                                loc.location ? (
-                                    <Marker
-                                        key={loc._id}
-                                        position={{
-                                            lat: loc.location.coordinates[1],
-                                            lng: loc.location.coordinates[0],
+                        <>
+                            <GoogleMap
+                                mapContainerStyle={mapContainerStyle}
+                                center={defaultCenter}
+                                zoom={10}
+                                onClick={handleMapClick}
+                                onLoad={(map) => (mapRef.current = map)}
+                            >
+                                {/* Draw polygon if points exist */}
+                                {polygonPoints.length > 0 && (
+                                    <Polygon
+                                        paths={polygonPoints}
+                                        options={{
+                                            fillColor: 'lightblue',
+                                            strokeColor: 'blue',
+                                            fillOpacity: 0.4,
+                                            strokeWeight: 2,
                                         }}
-                                        onClick={() => setSelectedMarker(loc)}
                                     />
-                                ) : null
-                            )}
+                                )}
 
-                            {selectedMarker && (
-                                <InfoWindow
-                                    position={{
-                                        lat: selectedMarker.location.coordinates[1],
-                                        lng: selectedMarker.location.coordinates[0],
-                                    }}
-                                    onCloseClick={() => setSelectedMarker(null)}
-                                >
-                                    <Box sx={{ p: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {selectedMarker.name || 'Unnamed Location'}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            {selectedMarker.address || 'No address available'}
-                                        </Typography>
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                navigate(`/locations/${selectedMarker._id}`)
-                                            }
-                                            sx={{ mt: 1 }}
-                                        >
-                                            View
-                                        </Button>
-                                    </Box>
-                                </InfoWindow>
+                                {/* Marker for selected nearby point */}
+                                {nearbyMode && nearbyPoint && (
+                                    <Marker
+                                        position={nearbyPoint}
+                                        icon={{
+                                            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                                            scaledSize: new window.google.maps.Size(40, 40),
+                                        }}
+                                    />
+                                )}
+
+                                {/* Markers for displayed locations */}
+                                {displayLocations.map((loc) =>
+                                    loc.location ? (
+                                        <Marker
+                                            key={loc._id}
+                                            position={{
+                                                lat: loc.location.coordinates[1],
+                                                lng: loc.location.coordinates[0],
+                                            }}
+                                            onClick={() => setSelectedMarker(loc)}
+                                        />
+                                    ) : null
+                                )}
+
+                                {selectedMarker && (
+                                    <InfoWindow
+                                        position={{
+                                            lat: selectedMarker.location.coordinates[1],
+                                            lng: selectedMarker.location.coordinates[0],
+                                        }}
+                                        onCloseClick={() => setSelectedMarker(null)}
+                                    >
+                                        <Box sx={{ p: 1 }}>
+                                            <Typography variant="subtitle1" fontWeight="bold">
+                                                {selectedMarker.name || 'Unnamed Location'}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                {selectedMarker.address || 'No address available'}
+                                            </Typography>
+                                            <Button
+                                                size="small"
+                                                onClick={() =>
+                                                    navigate(`/locations/${selectedMarker._id}`)
+                                                }
+                                                sx={{ mt: 1 }}
+                                            >
+                                                View
+                                            </Button>
+                                        </Box>
+                                    </InfoWindow>
+                                )}
+                            </GoogleMap>
+                            {showHeatmap && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2">Filter Heatmap by Month</Typography>
+                                    <Slider
+                                        value={selectedMonth || 0}
+                                        min={0}
+                                        max={12}
+                                        step={1}
+                                        marks={[
+                                            { value: 0, label: 'All' },
+                                            { value: 1, label: 'Jan' },
+                                            { value: 2, label: 'Feb' },
+                                            { value: 3, label: 'Mar' },
+                                            { value: 4, label: 'Apr' },
+                                            { value: 5, label: 'May' },
+                                            { value: 6, label: 'Jun' },
+                                            { value: 7, label: 'Jul' },
+                                            { value: 8, label: 'Aug' },
+                                            { value: 9, label: 'Sep' },
+                                            { value: 10, label: 'Oct' },
+                                            { value: 11, label: 'Nov' },
+                                            { value: 12, label: 'Dec' },
+                                        ]}
+                                        valueLabelDisplay="auto"
+                                        onChange={(_, val) => setSelectedMonth(val === 0 ? null : val)}
+                                    />
+                                    <Typography variant="caption">
+                                        {selectedMonth
+                                            ? `Month: ${new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })}`
+                                            : 'All months'}
+                                    </Typography>
+
+                                    <Typography variant="body2" sx={{ mt: 2 }}>Filter Heatmap by Year</Typography>
+                                    <Slider
+                                        value={selectedYear || 0}
+                                        min={2000}
+                                        max={new Date().getFullYear()}
+                                        step={1}
+                                        marks={[
+                                            { value: 0, label: 'All' },
+                                        ]}
+                                        valueLabelDisplay="auto"
+                                        onChange={(_, val) => setSelectedYear(val === 0 ? null : val)}
+                                    />
+                                    <Typography variant="caption">
+                                        {selectedYear ? `Year: ${selectedYear}` : 'All years'}
+                                    </Typography>
+                                </Box>
                             )}
-                        </GoogleMap>
-                    )}
+                            </>
+                        )}
                 </Box>
 
                 {/* RIGHT: LIST + BUTTONS */}

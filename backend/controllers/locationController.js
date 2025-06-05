@@ -17,7 +17,9 @@ module.exports = {
      */
     list: async (req, res) => {
         try {
-            const locations = await LocationModel.find({ user: req.user._id }).populate('user');
+            const locations = await LocationModel.find({ user: req.user._id })
+                .populate('user')
+                .populate('transactions');
 
             res.json({
                 message: 'User locations retrieved successfully',
