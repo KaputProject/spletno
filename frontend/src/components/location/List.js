@@ -22,6 +22,7 @@ import {
     useJsApiLoader,
     InfoWindow,
     Polygon,
+    HeatmapLayer
 } from '@react-google-maps/api';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
@@ -55,6 +56,9 @@ const LocationList = () => {
     const token = localStorage.getItem('token');
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
+    const [showHeatmap, setShowHeatmap] = useState(false);
+    const heatmapLayerRef = useRef(null);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -170,8 +174,46 @@ const LocationList = () => {
 
     // Determine which locations to display
     let displayLocations = filteredLocations;
+
     if (polygonMode && polygonResults.length > 0) displayLocations = polygonResults;
     if (nearbyMode && nearbyResults.length > 0) displayLocations = nearbyResults;
+
+    const heatmapData = displayLocations
+        .filter(loc => loc.location && (loc.total_spent != null || loc.total_received != null))
+        .map(loc => ({
+            location: new window.google.maps.LatLng(
+                loc.location.coordinates[1],
+                loc.location.coordinates[0]
+            ),
+            weight: (loc.total_spent || 0) + (loc.total_received || 0),
+        }));
+
+    useEffect(() => {
+        if (!isLoaded || !mapRef.current) return;
+
+        if (showHeatmap) {
+            heatmapLayerRef.current = new window.google.maps.visualization.HeatmapLayer({
+                data: heatmapData,
+                map: mapRef.current,
+                radius: 50,
+                opacity: 0.6,
+            });
+        } else {
+            // Remove heatmap layer from map
+            if (heatmapLayerRef.current) {
+                heatmapLayerRef.current.setMap(null);
+                heatmapLayerRef.current = null;
+            }
+        }
+
+        // Cleanup on unmount
+        return () => {
+            if (heatmapLayerRef.current) {
+                heatmapLayerRef.current.setMap(null);
+                heatmapLayerRef.current = null;
+            }
+        };
+    }, [showHeatmap, heatmapData, isLoaded]);
 
     if (loading || !isLoaded) {
         return (
@@ -370,6 +412,13 @@ const LocationList = () => {
                                     Search Nearby
                                 </Button>
                             )}
+
+                            <Button
+                                variant={showHeatmap ? 'contained' : 'outlined'}
+                                onClick={() => setShowHeatmap(prev => !prev)}
+                            >
+                                {showHeatmap ? 'Hide Heatmap' : 'Show Heatmap'}
+                            </Button>
                         </Box>
 
                         {/* Error message for both search methods */}
