@@ -1,5 +1,12 @@
 import React from 'react';
-import { Divider, ListItem, ListItemText, Typography } from '@mui/material';
+import {
+    ListItem,
+    ListItemText,
+    Typography,
+    Divider,
+    Box,
+    Chip,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const TransactionListItem = ({ transaction }) => {
@@ -9,34 +16,98 @@ const TransactionListItem = ({ transaction }) => {
         navigate(`/transactions/${transaction._id}`);
     };
 
+    const isOutgoing = transaction.outgoing;
+    const amountColor = isOutgoing ? 'error.main' : 'success.main';
+    const sign = isOutgoing ? '- ' : '+ ';
+    const showColon = !!transaction.location?.name;
+    const locationName = transaction.location?.name || '';
+
+    const dateObj = new Date(transaction.datetime);
+    const isMidnight =
+        dateObj.getHours() === 0 &&
+        dateObj.getMinutes() === 0 &&
+        dateObj.getSeconds() === 0;
+    const dateString = isMidnight
+        ? dateObj.toLocaleDateString()
+        : dateObj.toLocaleString();
+
     return (
         <>
             <ListItem
                 button
-                sx={{ py: 2, px: 3, cursor: 'pointer' }}
                 onClick={handleClick}
+                sx={{
+                    px: 3,
+                    py: 1.2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    gap: 0.5,
+                    '&:hover': {
+                        backgroundColor: 'action.hover',
+                    },
+                }}
             >
-                <ListItemText
-                    primary={
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight="medium"
+                        sx={{ color: amountColor }}
+                    >
+                        {locationName}
+                        {showColon && ':'} {sign}
+                        {transaction.change.toFixed(2)}{' '}
+                        {transaction.account?.currency || ''}
+                    </Typography>
+
+                    {transaction.account?.iban && (
                         <Typography
-                            variant="subtitle1"
-                            sx={{
-                                fontWeight: 'medium',
-                                color: transaction.outgoing ? 'error.main' : 'success.main',
-                            }}
+                            variant="caption"
+                            sx={{ fontFamily: 'monospace', color: 'text.secondary' }}
                         >
-                            {transaction.location?.name || 'Unknown'}: {transaction.outgoing ? '- ' : '+ '}
-                            {transaction.change.toFixed(2)}
+                            {transaction.account.iban}
                         </Typography>
-                    }
-                    secondary={
-                        <Typography variant="caption" color="textSecondary" sx={{ display: 'block' }}>
-                            {new Date(transaction.datetime).toLocaleString()}
-                        </Typography>
-                    }
-                />
+                    )}
+                </Box>
+
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Typography variant="caption" color="text.secondary">
+                        {dateString}
+                    </Typography>
+
+                    {transaction.original_location && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ whiteSpace: 'nowrap' }}
+                            >
+                                Location as written in statement:
+                            </Typography>
+                            <Chip
+                                label={transaction.original_location}
+                                size="small"
+                                variant="outlined"
+                            />
+                        </Box>
+                    )}
+                </Box>
             </ListItem>
-            <Divider />
+            <Divider component="li" />
         </>
     );
 };

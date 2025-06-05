@@ -40,6 +40,10 @@ const transactionSchema = new Schema({
 		type: Number,
 		default: null
 	},
+	'original_location': {
+		type: String,
+		default: null
+	}
 });
 
 module.exports = mongoose.model('transaction', transactionSchema);
