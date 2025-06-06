@@ -53,7 +53,7 @@ function App() {
             user: {
                 name: user.username,
                 email: user.email,
-                image: user.image || 'https://via.placeholder.com/150',
+                image: user.image,
             },
         } : null;
 

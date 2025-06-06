@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     };
 
 
-    const register = async ({ username, email, password, name, surname, dateOfBirth }) => {
+    const register = async ({ username, email, password, name, surname, dateOfBirth, identifier }) => {
         try {
             const response = await axios.post(`${URL}/users`, {
                 username,
@@ -85,7 +85,8 @@ export const AuthProvider = ({ children }) => {
                 password,
                 name,
                 surname,
-                dateOfBirth
+                dateOfBirth,
+                identifier
             });
 
             const newToken = response.data.token;

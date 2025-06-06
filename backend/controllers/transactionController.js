@@ -40,7 +40,7 @@ module.exports = {
             if (!statement) {
                 statement = new StatementModel({
                     user: user._id,
-                    account: account,
+                    account: account._id,
                     month: month,
                     year: year,
                     startDate: new Date(year, month, 1),
@@ -62,17 +62,15 @@ module.exports = {
             }
 
             let original_location = null;
-            if (!data.known_partner) {
-                if (data.outgoing) {
-                    original_location = data.description
-                } else {
-                    original_location = data.partner;
-                }
+            if (data.partner === user.identifier) {
+                original_location = data.description;
+            } else {
+                original_location = data.partner;
             }
 
             const transaction = new TransactionModel({
                 user: user._id,
-                account: account,
+                account: account._id,
                 location: location || null,
                 datetime: date,
                 description: data.description || null,

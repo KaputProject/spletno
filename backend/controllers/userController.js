@@ -1,12 +1,10 @@
 const UserModel = require('../models/userModel.js');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { isOwner } = require("../utils/authorize");
 const AccountController = require('./accountController');
 const LocationController = require('./locationController');
 const fs = require('fs');
 const path = require('path');
-const {toJSON} = require("express-session/session/cookie");
 
 /**
  * userController.js
@@ -139,9 +137,11 @@ module.exports = {
                     return res.status(400).json({ message: 'Username already taken.' });
                 }
                 if (existingUser.email === req.body.email) {
-                    return res.status(400).json({ message: 'Email already registered.' });
+                    return res.status(400).json({ message: 'Email already taken.' });
                 }
             }
+
+            console.log(req.body);
 
             const user = new UserModel({
                 username: req.body.username,
@@ -196,6 +196,7 @@ module.exports = {
             user.surname = req.body.surname || user.surname;
             user.email = req.body.email || user.email;
             user.dateOfBirth = req.body.dateOfBirth || user.dateOfBirth;
+            user.identifier = req.body.identifier || user.identifier;
 
             if (req.body.password) {
                 const salt = await bcrypt.genSalt(10);
