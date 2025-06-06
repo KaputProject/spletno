@@ -41,7 +41,7 @@ const userSchema = new Schema({
         default: false
     },
 
-    // Partners specific to the user
+    // Locations specific to the user
     'locations': [{
         type: Schema.Types.ObjectId,
         ref: 'location'

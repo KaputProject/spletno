@@ -56,7 +56,7 @@ const LocationList = () => {
     const token = localStorage.getItem('token');
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
-
+  
     const [showHeatmap, setShowHeatmap] = useState(false);
     const heatmapLayerRef = useRef(null);
     const [selectedMonth, setSelectedMonth] = useState(null);
@@ -205,7 +205,6 @@ const LocationList = () => {
 
     // Determine which locations to display
     let displayLocations = filteredLocations;
-
     if (polygonMode && polygonResults.length > 0) displayLocations = polygonResults;
     if (nearbyMode && nearbyResults.length > 0) displayLocations = nearbyResults;
 
@@ -281,7 +280,7 @@ const LocationList = () => {
                     display: 'flex',
                     flexDirection: isSmallScreen ? 'column' : 'row',
                     gap: 2,
-                    height: '100%',
+                    height: isSmallScreen ? 'auto' : '600px',
                 }}
             >
                 {/* LEFT: MAP */}
@@ -292,7 +291,7 @@ const LocationList = () => {
                         borderRadius: 2,
                         overflow: 'hidden',
                         boxShadow: 3,
-                        position: 'relative', // Important for heatmap box positioning
+                        position: 'relative',
                     }}
                 >
                     {isLoaded && (

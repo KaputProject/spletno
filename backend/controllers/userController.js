@@ -6,6 +6,7 @@ const AccountController = require('./accountController');
 const LocationController = require('./locationController');
 const fs = require('fs');
 const path = require('path');
+const {toJSON} = require("express-session/session/cookie");
 
 /**
  * userController.js
@@ -322,49 +323,33 @@ module.exports = {
                     }
                 })
                 .populate({
-                    path: 'partners',
-                    model: 'location'
+                    path: 'locations',
                 });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
 
-            // Statistika po partnerjih na ravni uporabnika
-            const partnerStats = {};
-
-            for (const acc of user.accounts || []) {
-                for (const stmt of acc.statements || []) {
-                    const transactions = stmt.transactions || [];
-                    for (const txn of transactions) {
-                        const partner = txn.location;
-                        if (partner) {
-                            const key = partner._id.toString();
-                            if (!partnerStats[key]) {
-                                partnerStats[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
-                                    number_of_transactions: 0,
-                                    amount: 0
-                                };
-                            }
-                            partnerStats[key].number_of_transactions += 1;
-                            partnerStats[key].amount += txn.change;
-                        }
-                    }
-                }
+            // Location stats: use model attributes
+            const locationStats = {};
+            for (const loc of user.locations || []) {
+                locationStats[loc._id.toString()] = {
+                    _id: loc._id,
+                    name: loc.name,
+                    inflow: loc.total_received || 0,
+                    outflow: loc.total_spent || 0,
+                    number_of_transactions: 0 // will be counted below
+                };
             }
 
-            // Statistika po računih
+            // Account and transaction stats
             const accounts = [];
-
             for (const acc of user.accounts || []) {
                 const accStats = {
                     _id: acc._id,
                     name: acc.iban,
                     balance: acc.balance,
                     transactions: 0,
-                    in: 0,
-                    out: 0,
+                    inflow: 0,
+                    outflow: 0,
                     locations: {},
                     statements: []
                 };
@@ -375,54 +360,78 @@ module.exports = {
                         month: stmt.month,
                         year: stmt.year,
                         total_transactions: transactions.length,
-                        in: stmt.inflow,
-                        out: stmt.outflow,
+                        inflow: 0,
+                        outflow: 0,
                         balance: stmt.endBalance,
-                        locations: {}
+                        locations: {},
+                        transactions: []
                     };
 
                     for (const txn of transactions) {
-                        const partner = txn.partner_parsed;
+                        const location = txn.location;
                         accStats.transactions += 1;
-                        if (txn.change >= 0) accStats.in += txn.change;
-                        else accStats.out += Math.abs(txn.change);
 
-                        if (partner) {
-                            const key = partner._id.toString();
+                        // Transaction inflow/outflow
+                        const inflow = txn.outgoing ? 0 : txn.change;
+                        const outflow = txn.outgoing ? txn.change : 0;
+                        accStats.inflow += inflow;
+                        accStats.outflow += outflow;
+                        stmtStats.inflow += inflow;
+                        stmtStats.outflow += outflow;
 
+                        stmtStats.transactions.push({
+                            _id: txn._id,
+                            date: txn.date || txn.datetime || null,
+                            datetime: txn.datetime || txn.date || null,
+                            description: txn.description,
+                            inflow,
+                            outflow,
+                            outgoing: txn.outgoing,
+                            location: location ? {
+                                _id: location._id,
+                                name: location.name,
+                                email: location.email || null
+                            } : null
+                        });
+
+                        // Per-location stats for account/statement
+                        if (location) {
+                            const key = location._id.toString();
                             if (!accStats.locations[key]) {
                                 accStats.locations[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
-                                    number_of_transactions: 0,
-                                    amount: 0
+                                    _id: location._id,
+                                    name: location.name,
+                                    inflow: 0,
+                                    outflow: 0,
+                                    number_of_transactions: 0
                                 };
                             }
-
                             if (!stmtStats.locations[key]) {
                                 stmtStats.locations[key] = {
-                                    _id: partner._id,
-                                    name: partner.name,
-                                    email: partner.email || null,
-                                    number_of_transactions: 0,
-                                    amount: 0
+                                    _id: location._id,
+                                    name: location.name,
+                                    inflow: 0,
+                                    outflow: 0,
+                                    number_of_transactions: 0
                                 };
                             }
-
+                            accStats.locations[key].inflow += inflow;
+                            accStats.locations[key].outflow += outflow;
                             accStats.locations[key].number_of_transactions += 1;
-                            accStats.locations[key].amount += txn.change;
-
+                            stmtStats.locations[key].inflow += inflow;
+                            stmtStats.locations[key].outflow += outflow;
                             stmtStats.locations[key].number_of_transactions += 1;
-                            stmtStats.locations[key].amount += txn.change;
+
+                            // Count transactions for global location stats
+                            if (locationStats[key]) {
+                                locationStats[key].number_of_transactions += 1;
+                            }
                         }
                     }
-
-                    stmtStats.partners = Object.values(stmtStats.partners);
+                    stmtStats.locations = Object.values(stmtStats.locations);
                     accStats.statements.push(stmtStats);
                 }
-
-                accStats.partners = Object.values(accStats.partners);
+                accStats.locations = Object.values(accStats.locations);
                 accounts.push(accStats);
             }
 
@@ -435,7 +444,7 @@ module.exports = {
                     email: user.email,
                     dateOfBirth: user.dateOfBirth,
                     avatarUrl: user.avatarUrl,
-                    locations: Object.values(partnerStats),
+                    locations: Object.values(locationStats),
                     accounts
                 }
             });
