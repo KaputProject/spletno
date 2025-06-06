@@ -56,7 +56,7 @@ const LocationList = () => {
     const token = localStorage.getItem('token');
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
-  
+
     const [showHeatmap, setShowHeatmap] = useState(false);
     const heatmapLayerRef = useRef(null);
     const [selectedMonth, setSelectedMonth] = useState(null);
@@ -205,6 +205,7 @@ const LocationList = () => {
 
     // Determine which locations to display
     let displayLocations = filteredLocations;
+
     if (polygonMode && polygonResults.length > 0) displayLocations = polygonResults;
     if (nearbyMode && nearbyResults.length > 0) displayLocations = nearbyResults;
 
@@ -274,16 +275,21 @@ const LocationList = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', height: '100vh', px: 2, py: 2 }}>
+        <Box sx={{
+            width: '100%',
+            height: '100vh',
+            px: 2,
+            py: 2,
+            overflow: 'hidden',
+        }}>
             <Box
                 sx={{
                     display: 'flex',
                     flexDirection: isSmallScreen ? 'column' : 'row',
                     gap: 2,
-                    height: isSmallScreen ? 'auto' : '600px',
+                    height: '100%',
                 }}
             >
-                {/* LEFT: MAP */}
                 <Box
                     sx={{
                         flex: 1,
@@ -291,11 +297,16 @@ const LocationList = () => {
                         borderRadius: 2,
                         overflow: 'hidden',
                         boxShadow: 3,
-                        position: 'relative',
                     }}
                 >
                     {isLoaded && (
-                        <>
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                            }}
+                        >
                             <GoogleMap
                                 mapContainerStyle={mapContainerStyle}
                                 center={defaultCenter}
@@ -303,6 +314,7 @@ const LocationList = () => {
                                 onClick={handleMapClick}
                                 onLoad={(map) => (mapRef.current = map)}
                                 options={{ styles: solidBackgroundStyle }}
+                                position="relative"
                             >
                                 {polygonPoints.length > 0 && (
                                     <Polygon
@@ -434,11 +446,10 @@ const LocationList = () => {
                                     />
                                 </Box>
                             )}
-                        </>
+                        </Box>
                     )}
                 </Box>
 
-                {/* RIGHT: LIST + BUTTONS */}
                 <Box
                     sx={{
                         flex: 1,
@@ -463,6 +474,14 @@ const LocationList = () => {
                             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                                 Your Locations
                             </Typography>
+
+                            <Button
+                                variant="contained"
+                                onClick={() => navigate('/locations/create')}
+                                disabled={polygonMode || nearbyMode}
+                            >
+                                Create Location
+                            </Button>
                         </Box>
 
                         <TextField
@@ -629,16 +648,6 @@ const LocationList = () => {
                                     </Paper>
                                 </Fade>
                             )}
-                        </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button
-                                variant="contained"
-                                onClick={() => navigate('/locations/create')}
-                                disabled={polygonMode || nearbyMode}
-                            >
-                                Create Location
-                            </Button>
                         </Box>
                     </Box>
                 </Box>
