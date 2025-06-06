@@ -91,7 +91,7 @@ function App() {
             <DashboardLayout branding={{ title: 'Kaput', homeUrl: '/' }}>
                 <LoadScript
                     googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-                    libraries={['places']}
+                    libraries={['places', 'visualization']}
                 >
                     <Routes location={location}>
                         <Route path="/" element={<Home />} />
