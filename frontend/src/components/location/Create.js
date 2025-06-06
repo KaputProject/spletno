@@ -78,10 +78,14 @@ const LocationCreate = () => {
 
                 setForm((prev) => ({ ...prev, lat, lng, address }));
                 setMarker({ lat, lng });
+                setSearchInput(address);
+
             } else {
                 console.error('Geocoder failed due to:', status);
                 setForm((prev) => ({ ...prev, lat, lng }));
                 setMarker({ lat, lng });
+                setSearchInput('');
+
             }
         });
     };
@@ -120,7 +124,7 @@ const LocationCreate = () => {
         <Box sx={{ width: '100%', mt: 2, px: 2 }}>
             <Box
                 sx={{
-                    maxWidth: 700,
+                    maxWidth: 800,
                     margin: '0 auto',
                     p: 4,
                     borderRadius: 4,
@@ -130,7 +134,7 @@ const LocationCreate = () => {
                 }}
             >
                 <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
-                    Create a New Location
+                    Create a new Location
                 </Typography>
 
                 <Typography sx={{ mb: 4 }}>
@@ -196,7 +200,7 @@ const LocationCreate = () => {
 
                         {form.lat && form.lng && (
                             <Typography variant="body2" sx={{ mt: 2 }}>
-                                Selected Location: {form.lat.toFixed(6)}, {form.lng.toFixed(6)}
+                                Selected Location: {form.address}
                             </Typography>
                         )}
 
@@ -207,7 +211,7 @@ const LocationCreate = () => {
                             fullWidth
                             sx={{ mt: 3 }}
                         >
-                            Create Partner
+                            Create Location
                         </Button>
                     </form>
                 </Paper>
