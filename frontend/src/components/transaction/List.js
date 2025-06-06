@@ -118,122 +118,129 @@ const TransactionList = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', mt: 2, px: 2 }}>
-            <Grid container spacing={2}>
-                <Grid item size={9}>
-                    <Box
-                        sx={{
-                            p: 4,
-                            borderRadius: 3,
-                            backgroundColor: 'background.paper',
-                            boxShadow: 4,
-                        }}
-                    >
+        <Box sx={{ width: '100%', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, overflow: 'hidden', px: 2, py: 2 }}>
+                <Grid container spacing={2} sx={{ height: '100%' }}>
+                    <Grid item size={9} sx={{ height: '100%' }}>
                         <Box
                             sx={{
+                                p: 4,
+                                borderRadius: 3,
+                                backgroundColor: 'background.paper',
+                                boxShadow: 4,
+                                height: '100%',
                                 display: 'flex',
-                                justifyContent: 'space-between',
-                                mb: 2,
-                                flexWrap: 'wrap',
-                                gap: 2,
+                                flexDirection: 'column',
                             }}
                         >
-                            <Typography variant="h4" fontWeight="bold">
-                                Your Transactions
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                size="medium"
-                                onClick={() => navigate('/transactions/create')}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    mb: 2,
+                                    flexWrap: 'wrap',
+                                    gap: 2,
+                                }}
                             >
-                                New Transaction
-                            </Button>
-                        </Box>
-
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                gap: 2,
-                                flexWrap: 'wrap',
-                                alignItems: 'center',
-                                mb: 2,
-                            }}
-                        >
-                            <FormControl sx={{ minWidth: 170 }} size="small">
-                                <InputLabel id="location-filter-label">Filter by Location</InputLabel>
-                                <Select
-                                    labelId="location-filter-label"
-                                    value={locationFilter}
-                                    label="Filter by Location"
-                                    onChange={(e) => setLocationFilter(e.target.value)}
+                                <Typography variant="h4" fontWeight="bold">
+                                    Your Transactions
+                                </Typography>
+                                <Button
+                                    variant="contained"
+                                    size="medium"
+                                    onClick={() => navigate('/transactions/create')}
                                 >
-                                    <MenuItem value="">All Locations</MenuItem>
-                                    {uniqueLocations.map((loc) => (
-                                        <MenuItem key={loc._id} value={loc._id}>
-                                            {loc.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                    New Transaction
+                                </Button>
+                            </Box>
 
-                            <TextField
-                                label="Search"
-                                variant="outlined"
-                                size="small"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                sx={{ flexGrow: 1, minWidth: 160 }}
-                            />
-
-                            <Button
-                                variant="outlined"
-                                size="medium"
-                                onClick={() =>
-                                    setSortByChange((prev) =>
-                                        prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
-                                    )
-                                }
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    gap: 2,
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    mb: 2,
+                                }}
                             >
-                                Sort by Amount {sortByChange === 'asc' ? '↑' : sortByChange === 'desc' ? '↓' : ''}
-                            </Button>
+                                <FormControl sx={{ minWidth: 170 }} size="small">
+                                    <InputLabel id="location-filter-label">Filter by Location</InputLabel>
+                                    <Select
+                                        labelId="location-filter-label"
+                                        value={locationFilter}
+                                        label="Filter by Location"
+                                        onChange={(e) => setLocationFilter(e.target.value)}
+                                    >
+                                        <MenuItem value="">All Locations</MenuItem>
+                                        {uniqueLocations.map((loc) => (
+                                            <MenuItem key={loc._id} value={loc._id}>
+                                                {loc.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                            <Button
-                                variant="outlined"
-                                size="medium"
-                                sx={{ width: '160px' }}
-                                onClick={() =>
-                                    setSortByDate((prev) =>
-                                        prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
-                                    )
-                                }
-                            >
-                                Sort by Date {sortByDate === 'asc' ? '↑' : sortByDate === 'desc' ? '↓' : ''}
-                            </Button>
+                                <TextField
+                                    label="Search"
+                                    variant="outlined"
+                                    size="small"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    sx={{ flexGrow: 1, minWidth: 160 }}
+                                />
+
+                                <Button
+                                    variant="outlined"
+                                    size="medium"
+                                    onClick={() =>
+                                        setSortByChange((prev) =>
+                                            prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
+                                        )
+                                    }
+                                >
+                                    Sort by Amount {sortByChange === 'asc' ? '↑' : sortByChange === 'desc' ? '↓' : ''}
+                                </Button>
+
+                                <Button
+                                    variant="outlined"
+                                    size="medium"
+                                    sx={{ width: '160px' }}
+                                    onClick={() =>
+                                        setSortByDate((prev) =>
+                                            prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc'
+                                        )
+                                    }
+                                >
+                                    Sort by Date {sortByDate === 'asc' ? '↑' : sortByDate === 'desc' ? '↓' : ''}
+                                </Button>
+                            </Box>
+
+                            <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                                {filteredAndSortedTransactions.length === 0 ? (
+                                    <Typography>No transactions found.</Typography>
+                                ) : (
+                                    <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden' }}>
+                                        <List disablePadding>
+                                            {filteredAndSortedTransactions.map((tx, index) => {
+                                                if (!tx || !tx._id) return null;
+                                                return <TransactionListItem key={tx._id || index} transaction={tx} />;
+                                            })}
+                                        </List>
+                                    </Paper>
+                                )}
+                            </Box>
                         </Box>
+                    </Grid>
 
-                        {filteredAndSortedTransactions.length === 0 ? (
-                            <Typography>No transactions found.</Typography>
-                        ) : (
-                            <Paper elevation={3} sx={{ width: '100%', overflow: 'hidden' }}>
-                                <List disablePadding>
-                                    {filteredAndSortedTransactions.map((tx, index) => {
-                                        if (!tx || !tx._id) return null;
-                                        return <TransactionListItem key={tx._id || index} transaction={tx} />;
-                                    })}
-                                </List>
-                            </Paper>
-                        )}
-                    </Box>
+                    <Grid item size={3} sx={{ height: '100%' }}>
+                        <TransactionSummary
+                            mostRecent={mostRecent}
+                            biggestPositive={biggestPositive}
+                            biggestNegative={biggestNegative}
+                        />
+                    </Grid>
                 </Grid>
-
-                <Grid item size={3}>
-                    <TransactionSummary
-                        mostRecent={mostRecent}
-                        biggestPositive={biggestPositive}
-                        biggestNegative={biggestNegative}
-                    />
-                </Grid>
-            </Grid>
+            </Box>
         </Box>
     );
 };

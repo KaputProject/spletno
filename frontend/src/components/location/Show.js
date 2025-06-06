@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import {Box, Typography, Button, Paper, CircularProgress, ButtonGroup} from '@mui/material';
+import {
+    Box,
+    Typography,
+    Button,
+    Paper,
+    CircularProgress,
+    ButtonGroup,
+    Divider,
+    Grid,
+} from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
@@ -9,7 +18,7 @@ const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
 const mapContainerStyle = {
     width: '100%',
-    height: '300px',
+    height: '100%',
 };
 
 const LocationShow = () => {
@@ -25,7 +34,7 @@ const LocationShow = () => {
     });
 
     useEffect(() => {
-        const fetchPartner = async () => {
+        const fetchLocation = async () => {
             try {
                 const res = await axios.get(`${URL}/locations/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -39,7 +48,7 @@ const LocationShow = () => {
             }
         };
 
-        fetchPartner();
+        fetchLocation();
     }, [id, token]);
 
     const handleDelete = () => async () => {
@@ -48,28 +57,29 @@ const LocationShow = () => {
                 await axios.delete(`${URL}/locations/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
                 navigate('/locations');
-            } catch (err) {
+            } catch {
                 setError('Failed to delete location.');
             }
         }
-    }
+    };
 
     if (loading) {
         return (
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-                <CircularProgress />
+            <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
+                <CircularProgress size={48} />
             </Box>
         );
     }
 
     if (error) {
         return (
-            <Box sx={{ mt: 4, textAlign: 'center' }}>
-                <Typography color="error" variant="h6">{error}</Typography>
-                <Button sx={{ mt: 2 }} onClick={() => navigate('/locations')} variant="contained">
-                    Back to Partners
+            <Box sx={{ mt: 6, textAlign: 'center' }}>
+                <Typography color="error" variant="h6">
+                    {error}
+                </Typography>
+                <Button variant="contained" onClick={() => navigate('/locations')}>
+                    Back to Locations
                 </Button>
             </Box>
         );
@@ -77,79 +87,94 @@ const LocationShow = () => {
 
     if (!location) return null;
 
-    const coordinates = location.location?.coordinates || [0, 0];
-    const position = { lat: coordinates[1], lng: coordinates[0] };
+    const coordinates = location?.location?.coordinates;
+    const lat = coordinates?.[1];
+    const lng = coordinates?.[0];
 
     return (
-        <Box sx={{
-            width: '100%',
-            mt: 2,
-            px: 2
-        }}>
-            <Box
-                sx={{
-                    margin: '0 auto',
-                    p: 4,
-                    borderRadius: 4,
-                    backgroundColor: 'background.paper',
-                    boxShadow: 3,
-                }}
-            >
+        <Box sx={{ mt: 2, px: 2 }}>
+            <Paper elevation={4} sx={{ p: 4, borderRadius: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography variant="h4" fontWeight="bold">
-                        {location.name}
+                        Location Details
                     </Typography>
                     <ButtonGroup variant="outlined">
                         <Button onClick={() => navigate('/locations')}>Back</Button>
                         <Button onClick={() => navigate(`/locations/${id}/update`)}>Edit</Button>
-                        <Button color="error" onClick={handleDelete()}>Delete</Button>
+                        <Button color="error" onClick={handleDelete()}>
+                            Delete
+                        </Button>
                     </ButtonGroup>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom>Basic Info</Typography>
-                    <Typography><strong>Identifier:</strong> {location.identifier || 'N/A'}</Typography>
-                    <Typography><strong>Description:</strong> {location.description || 'N/A'}</Typography>
-                    <Typography><strong>Address:</strong> {location.address || 'N/A'}</Typography>
-                </Box>
+                <Divider sx={{ mb: 3 }} />
 
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom>Financials</Typography>
-                    <Typography><strong>Total Spent:</strong> €{location.total_spent?.toFixed(2) || 0}</Typography>
-                    <Typography><strong>Total Received:</strong> €{location.total_received?.toFixed(2) || 0}</Typography>
-                </Box>
+                <Grid container spacing={4}>
+                    <Grid item size={7}>
+                        <Grid container spacing={2}>
+                            <Grid item size={4}>
+                                <Detail label="Name" value={location.name} isEmphasized />
+                            </Grid>
+                            <Grid item size={4}>
+                                <Detail label="Identifier" value={location.identifier || 'N/A'} />
+                            </Grid>
+                            <Grid item size={4}>
+                                <Detail label="Description" value={location.description || 'N/A'} />
+                            </Grid>
+                            <Grid item size={4}>
+                                <Detail label="Address" value={location.address || 'N/A'} />
+                            </Grid>
+                            <Grid item size={4}>
+                                <Detail label="Total Spent" value={`€${location.total_spent?.toFixed(2) || '0.00'}`} />
+                            </Grid>
+                            <Grid item size={4}>
+                                <Detail label="Total Received" value={`€${location.total_received?.toFixed(2) || '0.00'}`} />
+                            </Grid>
+                        </Grid>
+                    </Grid>
 
-                <Box>
-                    {isLoaded && location.location?.coordinates ? (
-                        <>
-                            <Box sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                                <GoogleMap
-                                    mapContainerStyle={mapContainerStyle}
-                                    center={{ lat: location.lat, lng: location.lng }}
-                                    zoom={15}
+                    <Grid item size={5}>
+                        {isLoaded && lat && lng ? (
+                            <>
+                                <Box
+                                    sx={{
+                                        height: 300,
+                                        borderRadius: 2,
+                                        overflow: 'hidden',
+                                        mb: 2,
+                                    }}
                                 >
-                                    <Marker position={{ lat: location.lat, lng: location.lng }} />
-                                </GoogleMap>
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: 'left',
-                                    alignItems: 'center',
-                                    gap: 2,
-                                }}
-                            >
-                                <Typography><strong>Latitude:</strong> {location.lat ?? 'N/A'}</Typography>
-                                <Typography><strong>Longitude:</strong> {location.lng ?? 'N/A'}</Typography>
-                            </Box>
-                        </>
+                                    <GoogleMap
+                                        mapContainerStyle={mapContainerStyle}
+                                        center={{ lat, lng }}
+                                        zoom={15}
+                                    >
+                                        <Marker position={{ lat, lng }} />
+                                    </GoogleMap>
+                                </Box>
+                                <Typography><strong>Address:</strong> {location.address}</Typography>
+                            </>
                         ) : (
-                        <Typography color="text.secondary">Map could not be loaded.</Typography>
-                    )}
-                </Box>
-            </Box>
+                            <Typography variant="body1" color="text.secondary">
+                                Map could not be loaded or location missing.
+                            </Typography>
+                        )}
+                    </Grid>
+                </Grid>
+            </Paper>
         </Box>
     );
 };
+
+const Detail = ({ label, value, isEmphasized = false }) => (
+    <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            {label}
+        </Typography>
+        <Typography variant={isEmphasized ? 'h6' : 'body1'}>
+            {value}
+        </Typography>
+    </Box>
+);
 
 export default LocationShow;
