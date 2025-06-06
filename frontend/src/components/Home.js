@@ -75,73 +75,68 @@ const Home = () => {
             drawTxnCountBarChart();
             drawInflowPieChart();
         }
-        // eslint-disable-next-line
     }, [stats, accountFilter, monthFilter]);
 
-    // Sankey: smaller width/height, filtered data
     const drawSankeyDiagram = () => {
         if (!stats || !Array.isArray(stats.locations)) return;
 
-        const data = { nodes: [], links: [] };
         const accs = filteredAccountsWithStatements;
         const locs = stats.locations;
 
-        // Nodes: accounts and locations
-        const allNodes = [
-            ...accs.map(acc => ({ name: acc.name, type: 'account' })),
-            ...locs.map(loc => ({ name: loc.name, type: 'location' }))
-        ];
-        data.nodes = Array.from(new Map(allNodes.map(n => [n.name, n])).values());
+        let data = { nodes: [], links: [] };
 
-        // Links: inflow (location -> account), outflow (account -> location)
+        const nodeMap = new Map();
+        const linkMap = new Map();
+
+        accs.forEach(acc => {
+            nodeMap.set(acc.name, { id: acc.name, name: acc.name, type: 'account' });
+        });
+
         accs.forEach(acc => {
             acc.statements.forEach(stmt => {
                 stmt.transactions.forEach(txn => {
-                    const location = txn.location;
-                    if (!location) return;
-                    if (txn.outflow > 0) {
-                        data.links.push({
-                            source: acc.name,
-                            target: location.name,
-                            value: txn.outflow
-                        });
-                    }
+                    const loc = txn.location;
+                    if (!loc) return;
+
                     if (txn.inflow > 0) {
-                        data.links.push({
-                            source: location.name,
-                            target: acc.name,
-                            value: txn.inflow
-                        });
+                        const locId = `${loc.name}_in`;
+                        if (!nodeMap.has(locId)) {
+                            nodeMap.set(locId, { id: locId, name: loc.name, type: 'location_in' });
+                        }
+
+                        const key = `${locId}=>${acc.name}`;
+                        linkMap.set(key, (linkMap.get(key) || 0) + txn.inflow);
+                    }
+
+                    if (txn.outflow > 0) {
+                        const locId = `${loc.name}_out`;
+                        if (!nodeMap.has(locId)) {
+                            nodeMap.set(locId, { id: locId, name: loc.name, type: 'location_out' });
+                        }
+
+                        const key = `${acc.name}=>${locId}`;
+                        linkMap.set(key, (linkMap.get(key) || 0) + txn.outflow);
                     }
                 });
             });
         });
 
-        // Filter nodes to only those that are connected by at least one link
-        const connectedNames = new Set();
-        data.links.forEach(link => {
-            connectedNames.add(link.source);
-            connectedNames.add(link.target);
-        });
-        data.nodes = data.nodes.filter(n => connectedNames.has(n.name));
+        data = { nodes: Array.from(nodeMap.values()), links: [] };
+        const nameToIndex = new Map(data.nodes.map((node, i) => [node.id, i]));
 
-        // If there are no links, clear the chart and return
-        if (data.links.length === 0) {
-            d3.select(sankeyChartRef.current).html('<div style="padding:24px;color:#888;">No connections for this selection.</div>');
-            return;
+        for (const [key, value] of linkMap.entries()) {
+            const [sourceId, targetId] = key.split('=>');
+            if (nameToIndex.has(sourceId) && nameToIndex.has(targetId)) {
+                data.links.push({
+                    source: nameToIndex.get(sourceId),
+                    target: nameToIndex.get(targetId),
+                    value
+                });
+            }
         }
 
-        // Rebuild nodeNameToIndex after filtering
-        const nodeNameToIndex = new Map(data.nodes.map((node, i) => [node.name, i]));
-        data.links = data.links
-            .filter(link => nodeNameToIndex.has(link.source) && nodeNameToIndex.has(link.target))
-            .map(link => ({
-                source: nodeNameToIndex.get(link.source),
-                target: nodeNameToIndex.get(link.target),
-                value: link.value
-            }));
-
         const width = 1000, height = 500;
+
         const svg = d3.select(sankeyChartRef.current)
             .html('')
             .append('svg')
@@ -158,6 +153,7 @@ const Home = () => {
             links: data.links.map(d => ({ ...d }))
         });
 
+        // Draw nodes
         svg.append('g')
             .selectAll('rect')
             .data(graph.nodes)
@@ -166,10 +162,11 @@ const Home = () => {
             .attr('y', d => d.y0)
             .attr('height', d => d.y1 - d.y0)
             .attr('width', d => d.x1 - d.x0)
-            .attr('fill', d => d.type === 'account' ? '#2196f3' : '#4caf50')
+            .attr('fill', d => d.type.includes('account') ? '#2196f3' : '#4caf50')
             .append('title')
-            .text(d => (d && d.name ? `${d.name}\n${Number(d.value || 0).toFixed(2)} €` : ''));
+            .text(d => `${d.name}\n${Number(d.value || 0).toFixed(2)} €`);
 
+        // Draw links
         svg.append('g')
             .attr('fill', 'none')
             .selectAll('path')
@@ -181,24 +178,22 @@ const Home = () => {
             .attr('stroke-width', d => Math.max(1, d.width || 1))
             .append('title')
             .text(d => {
-                const sourceName = d.source && d.source.name ? d.source.name : '';
-                const targetName = d.target && d.target.name ? d.target.name : '';
-                return `${sourceName} → ${targetName}\n${Number(d.value || 0).toFixed(2)} €`;
+                const src = d.source.name;
+                const tgt = d.target.name;
+                return `${src} → ${tgt}\n${Number(d.value || 0).toFixed(2)} €`;
             });
 
+        // Add labels
         svg.append('g')
             .style('font', '10px sans-serif')
             .selectAll('text')
             .data(graph.nodes)
             .join('text')
-            .attr('x', d => d.x0 - 6)
-            .attr('y', d => (d.y1 + d.y0) / 2)
+            .attr('x', d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+            .attr('y', d => (d.y0 + d.y1) / 2)
             .attr('dy', '0.35em')
-            .attr('text-anchor', 'end')
-            .text(d => d.name)
-            .filter(d => d.x0 < width / 2)
-            .attr('x', d => d.x1 + 6)
-            .attr('text-anchor', 'start');
+            .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
+            .text(d => d.name);
     };
 
     // Bar chart: wider, prevent label overlap, filtered data
@@ -579,55 +574,35 @@ const Home = () => {
 
     return (
         <Box sx={{ width: '100%', mt: 2, px: 2 }}>
-            {/* User info and filters */}
-            <Paper sx={{ p: 4, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <img
-                        src={`${process.env.REACT_APP_BACKEND_URL}${user.avatarUrl}`}
-                        alt="avatar"
-                        style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                    <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {user.name} {user.surname}
-                        </Typography>
-                        <Typography color="text.secondary">{user.email}</Typography>
+            {/* Summary Section */}
+            <Paper sx={{ p: 4, mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 0 }}>
+                        Your Financial History
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <FormControl size="small" sx={{ minWidth: 160 }}>
+                            <InputLabel>Account</InputLabel>
+                            <Select value={accountFilter} label="Account" onChange={e => setAccountFilter(e.target.value)}>
+                                {accountOptions.map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl size="small" sx={{ minWidth: 160 }}>
+                            <InputLabel>Month</InputLabel>
+                            <Select value={monthFilter} label="Month" onChange={e => setMonthFilter(e.target.value)}>
+                                {monthOptions.map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>Account</InputLabel>
-                        <Select
-                            value={accountFilter}
-                            label="Account"
-                            onChange={e => setAccountFilter(e.target.value)}
-                        >
-                            {accountOptions.map(opt => (
-                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel>Month</InputLabel>
-                        <Select
-                            value={monthFilter}
-                            label="Month"
-                            onChange={e => setMonthFilter(e.target.value)}
-                        >
-                            {monthOptions.map(opt => (
-                                <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
-            </Paper>
 
-            {/* Statistics summary */}
-            <Paper sx={{ p: 4, mb: 3 }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Your Financial History
-                </Typography>
                 <Divider sx={{ mb: 2 }} />
+
+                {/* Summary Stats */}
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Number of Accounts:</Typography>
@@ -702,85 +677,83 @@ const Home = () => {
                 </Grid>
             </Paper>
 
-            {/* Sankey Diagram */}
-            <Paper sx={{ p: 4, mt: 4, ml: 0}}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Financial Flows (Sankey Diagram)
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Box ref={sankeyChartRef} />
-            </Paper>
-
-            {/* Bar Chart */}
-            <Paper sx={{ p: 4, mt: 4, mx: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Account Inflow/Outflow (Bar Chart)
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Box ref={barChartRef} />
-            </Paper>
-
-            {/* Transaction Count Bar Chart */}
-            <Paper sx={{ p: 4, mt: 4, mx: 'auto' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    Transactions per Account (Bar Chart)
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Box ref={txnCountBarChartRef} />
-            </Paper>
-
-            {/* Outflow Pie Chart */}
-            <Paper sx={{ p: 4, mt: 4, display: 'flex', alignItems: 'flex-start', gap: 4, minHeight: 550, mx: 'auto' }}>
-                {/* Left: Chart with title */}
-                <Box sx={{ position: 'relative', width: 400, height: 400 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        Outflow per Location (Pie Chart)
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Box id="locationPieChart" sx={{ width: 400, height: 320 }} />
-                </Box>
-
-                {/* Right: Legend */}
-                <Box id="locationPieLegend" sx={{ minWidth: 200 }} />
-            </Paper>
-
-            {/* Inflow Pie Chart */}
-            <Paper sx={{ p: 4, mt: 4, display: 'flex', alignItems: 'flex-start', gap: 4, minHeight: 550 }}>
-                {/* Left: Chart with title */}
-                <Box sx={{ position: 'relative', width: 400, height: 400 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        Inflow per Location (Pie Chart)
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Box id="inflowPieChart" sx={{ width: 400, height: 320 }} />
-                </Box>
-
-                {/* Right: Legend */}
-                <Box id="inflowPieLegend" sx={{ minWidth: 200 }} />
-            </Paper>
-
-
-            {/* List of locations with inflow/outflow */}
-            <Paper sx={{ p: 4, mt: 4 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                    Locations (Inflow/Outflow)
-                </Typography>
-                <Grid container spacing={2}>
-                    {stats.locations.map(loc => (
-                        <Grid item xs={12} sm={6} md={4} key={loc._id}>
-                            <Paper sx={{ p: 2 }}>
-                                <Typography variant="subtitle1">{loc.name}</Typography>
-                                <Typography color="success.main">Inflow: {loc.inflow.toFixed(2)} €</Typography>
-                                <Typography color="error.main">Outflow: {loc.outflow.toFixed(2)} €</Typography>
-                            </Paper>
-                        </Grid>
-                    ))}
+            <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 4, height: '100%' }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            Financial Flows (Sankey Diagram)
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Box ref={sankeyChartRef} />
+                    </Paper>
                 </Grid>
-            </Paper>
+                <Grid item xs={12} md={6} >
+                    <Paper sx={{ p: 4, height: '100%' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                            Locations (Inflow/Outflow)
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {stats.locations.map(loc => (
+                                <Grid item xs={12} sm={6} key={loc._id}>
+                                    <Paper sx={{ p: 2 }}>
+                                        <Typography variant="subtitle1">{loc.name}</Typography>
+                                        <Typography color="success.main">Inflow: {loc.inflow.toFixed(2)} €</Typography>
+                                        <Typography color="error.main">Outflow: {loc.outflow.toFixed(2)} €</Typography>
+                                    </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+                </Grid>
+            </Grid>
 
-            <Paper sx={{ p: 4, mt: 4 }}>
-                <pre>{JSON.stringify(stats, null, 2)}</pre>
-            </Paper>
+            <Grid container spacing={4} sx={{ mt: 4 }}>
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 4, display: 'flex', gap: 4, minHeight: 550 }}>
+                        <Box sx={{ width: 400 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                Outflow per Location (Pie Chart)
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Box id="locationPieChart" sx={{ width: 400, height: 320 }} />
+                        </Box>
+                        <Box id="locationPieLegend" sx={{ minWidth: 200 }} />
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 4, display: 'flex', gap: 4, minHeight: 550 }}>
+                        <Box sx={{ width: 400 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                Inflow per Location (Pie Chart)
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Box id="inflowPieChart" sx={{ width: 400, height: 320 }} />
+                        </Box>
+                        <Box id="inflowPieLegend" sx={{ minWidth: 200 }} />
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            <Grid container spacing={4} sx={{ mt: 4 }}>
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 4 }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            Account Inflow/Outflow (Bar Chart)
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Box ref={barChartRef} />
+                    </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 4 }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            Transactions per Account (Bar Chart)
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Box ref={txnCountBarChartRef} />
+                    </Paper>
+                </Grid>
+            </Grid>
         </Box>
     );
 };
