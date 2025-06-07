@@ -68,7 +68,6 @@ const Home = () => {
         })))
     );
 
-    // For Sankey and bar chart, recalculate inflow/outflow per filtered data
     useEffect(() => {
         if (stats && sankeyChartRef.current) {
             drawSankeyDiagram();
@@ -77,6 +76,26 @@ const Home = () => {
             drawTxnCountBarChart();
             drawInflowPieChart();
         }
+
+        let resizeTimeout;
+        const handleResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                drawSankeyDiagram();
+                drawSankeyDiagram();
+                drawBarChart();
+                drawLocationPieChart();
+                drawTxnCountBarChart();
+                drawInflowPieChart();
+            }, 200);
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearTimeout(resizeTimeout);
+        };
     }, [stats, accountFilter, monthFilter]);
 
     const drawSankeyDiagram = () => {
@@ -206,7 +225,7 @@ const Home = () => {
         if (!stats || !barChartRef.current) return;
 
         const container = barChartRef.current;
-        const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+        const margin = { top: 20, right: 20, bottom: 40, left: 20 };
         const width = container.clientWidth - margin.left - margin.right;
         const height = container.clientHeight - margin.top - margin.bottom;
         const data = filteredAccountsWithStatements.map(acc => ({
@@ -295,7 +314,7 @@ const Home = () => {
         if (!stats || !txnCountBarChartRef.current) return;
 
         const container = barChartRef.current;
-        const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+        const margin = { top: 20, right: 20, bottom: 40, left: 20 };
         const width = container.clientWidth - margin.left - margin.right;
         const height = container.clientHeight - margin.top - margin.bottom;
         const data = filteredAccountsWithStatements.map(acc => ({
@@ -824,7 +843,7 @@ const Home = () => {
                             Account Inflow/Outflow (Bar Chart)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        <Box ref={barChartRef} sx={{ width: '100%', height: 'calc(100% - 64px)' }} />
+                        <Box ref={barChartRef} sx={{ width: '100%', height: '95%' }} />
                     </Paper>
                 </Grid>
 
@@ -834,7 +853,7 @@ const Home = () => {
                             Transactions per Account (Bar Chart)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        <Box ref={txnCountBarChartRef} sx={{ width: '100%', height: 'calc(100% - 64px)' }} />
+                        <Box ref={txnCountBarChartRef} sx={{ width: '100%', height: '95%' }} />
                     </Paper>
                 </Grid>
             </Grid>
