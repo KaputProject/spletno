@@ -7,6 +7,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
@@ -19,7 +20,7 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-        const result = await register({ username, email, password, name, surname, dateOfBirth });
+        const result = await register({ username, email, password, name, surname, dateOfBirth, identifier });
         if (!result.success) {
             setError(result.message);
         } else {
@@ -82,6 +83,14 @@ const Register = () => {
                         InputLabelProps={{ shrink: true }}
                         value={dateOfBirth}
                         onChange={(e) => setDateOfBirth(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Identifier (Your name on the bank statements)"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
                         required
                     />
                     <TextField

@@ -183,10 +183,11 @@ module.exports = {
                 message: 'Error when creating statement', error: err
             });
         }
-    }, /**
+    },
+
+    /**
      * Upload PDF datoteke in posredovanje na drug port/storitev
      */
-
     upload: async (req, res) => {
         try {
             // Preveri, če je datoteka priložena

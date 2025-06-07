@@ -42,7 +42,13 @@ module.exports = {
      */
     show: async (req, res) => {
         try {
-            const partner = await LocationModel.findById(req.params.id);
+            const partner = await LocationModel.findById(req.params.id)
+                .populate({
+                    path: 'transactions',
+                    populate: {
+                        path: 'account'
+                    }
+                });
 
             if (!partner) {
                 return res.status(404).json({ message: 'No such partner' });
