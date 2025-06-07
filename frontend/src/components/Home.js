@@ -730,7 +730,7 @@ const Home = () => {
                             sx={{
                                 width: '100%',
                                 minWidth: 0,
-                                height: '100%',
+                                height: '95%',
                             }}
                         />
                     </Paper>
@@ -797,7 +797,7 @@ const Home = () => {
                             p: 4,
                             display: 'flex',
                             gap: 4,
-                            minHeight: 550,
+                            height: 600,
                             width: '100%',
                             boxSizing: 'border-box',
                         }}
@@ -807,7 +807,7 @@ const Home = () => {
                                 Outflow per Location (Pie Chart)
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
-                            <Box id="locationPieChart" ref={outPieChartRef} sx={{ width: '100%', height: '100%' }} />
+                            <Box id="locationPieChart" ref={outPieChartRef} sx={{ width: '100%', height: '95%' }} />
                         </Box>
                         <Box id="locationPieLegend" sx={{ minWidth: 100 }} />
                     </Paper>
@@ -819,7 +819,7 @@ const Home = () => {
                             p: 4,
                             display: 'flex',
                             gap: 4,
-                            minHeight: 550,
+                            height: 600,
                             width: '100%',
                             boxSizing: 'border-box',
                         }}
@@ -829,7 +829,7 @@ const Home = () => {
                                 Inflow per Location (Pie Chart)
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
-                            <Box id="inflowPieChart" ref={inPieChartRef} sx={{ width: '100%', height: '100%' }} />
+                            <Box id="inflowPieChart" ref={inPieChartRef} sx={{ width: '100%', height: '95%' }} />
                         </Box>
                         <Box id="inflowPieLegend" sx={{ minWidth: 100 }} />
                     </Paper>
