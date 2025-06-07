@@ -16,6 +16,8 @@ const Home = () => {
     const sankeyChartRef = useRef(null);
     const barChartRef = useRef(null);
     const txnCountBarChartRef = useRef(null);
+    const inPieChartRef = useRef(null);
+    const outPieChartRef = useRef(null);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -203,9 +205,10 @@ const Home = () => {
     const drawBarChart = () => {
         if (!stats || !barChartRef.current) return;
 
+        const container = barChartRef.current;
         const margin = { top: 20, right: 20, bottom: 40, left: 60 };
-        const width = 900 - margin.left - margin.right;
-        const height = 300 - margin.top - margin.bottom;
+        const width = container.clientWidth - margin.left - margin.right;
+        const height = container.clientHeight - margin.top - margin.bottom;
         const data = filteredAccountsWithStatements.map(acc => ({
             name: acc.name,
             inflow: acc.statements.reduce((sum, stmt) => sum + (stmt.inflow || 0), 0),
@@ -229,9 +232,9 @@ const Home = () => {
             .attr('transform', `translate(0,${height})`)
             .call(d3.axisBottom(x))
             .selectAll("text")
-            .style('text-anchor', 'end')
-            .attr('dx', '-0.8em')
-            .attr('dy', '0.15em');
+            .style('text-anchor', 'middle')
+            .attr('dx', '0')
+            .attr('dy', '1em');
 
         const maxY = d3.max(data, d => Math.max(d.inflow, d.outflow)) || 0;
         const y = d3.scaleLinear()
@@ -291,9 +294,10 @@ const Home = () => {
     const drawTxnCountBarChart = () => {
         if (!stats || !txnCountBarChartRef.current) return;
 
-        const margin = { top: 20, right: 20, bottom: 40, left: 60 };
-        const width = 900 - margin.left - margin.right;
-        const height = 300 - margin.top - margin.bottom;
+        const container = barChartRef.current;
+        const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+        const width = container.clientWidth - margin.left - margin.right;
+        const height = container.clientHeight - margin.top - margin.bottom;
         const data = filteredAccountsWithStatements.map(acc => ({
             name: acc.name,
             count: acc.statements.reduce((sum, stmt) => sum + (stmt.total_transactions || 0), 0)
@@ -316,9 +320,9 @@ const Home = () => {
             .attr('transform', `translate(0,${height})`)
             .call(d3.axisBottom(x))
             .selectAll("text")
-            .style('text-anchor', 'end')
-            .attr('dx', '-0.8em')
-            .attr('dy', '0.15em');
+            .style('text-anchor', 'middle')
+            .attr('dx', '0')
+            .attr('dy', '1em');
 
         const y = d3.scaleLinear()
             .domain([0, d3.max(data, d => d.count) || 0])
@@ -361,7 +365,8 @@ const Home = () => {
         });
         const data = Object.entries(outflowByLocation).map(([name, value]) => ({ name, value }));
 
-        const width = 400, height = 400, radius = Math.min(width, height) / 2.1;
+        const container = outPieChartRef.current;
+        const width = container.clientWidth, height = container.clientHeight, radius = Math.min(width, height) / 2.1;
         d3.select('#locationPieChart').selectAll('*').remove();
         d3.select('#locationPieLegend').selectAll('*').remove();
 
@@ -440,7 +445,8 @@ const Home = () => {
         });
         const data = Object.entries(inflowByLocation).map(([name, value]) => ({ name, value }));
 
-        const width = 400, height = 400, radius = Math.min(width, height) / 2.1;
+        const container = inPieChartRef.current;
+        const width = container.clientWidth, height = container.clientHeight, radius = Math.min(width, height) / 2.1;
         d3.select('#inflowPieChart').selectAll('*').remove();
         d3.select('#inflowPieLegend').selectAll('*').remove();
 
@@ -636,19 +642,19 @@ const Home = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Avg. Inflow per Account:</Typography>
-                        <Typography variant="h6">{avgInPerAccount.toLocaleString(undefined, {minimumFractionDigits: 2})} €</Typography>
+                        <Typography variant="h6">{avgInPerAccount.toLocaleString(undefined, {maximumFractionDigits: 2})} €</Typography>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Avg. Outflow per Account:</Typography>
-                        <Typography variant="h6">{avgOutPerAccount.toLocaleString(undefined, {minimumFractionDigits: 2})} €</Typography>
+                        <Typography variant="h6">{avgOutPerAccount.toLocaleString(undefined, {maximumFractionDigits: 2})} €</Typography>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Avg. Inflow per Transaction:</Typography>
-                        <Typography variant="h6">{avgInPerTxn.toLocaleString(undefined, {minimumFractionDigits: 2})} €</Typography>
+                        <Typography variant="h6">{avgInPerTxn.toLocaleString(undefined, {maximumFractionDigits: 2})} €</Typography>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Avg. Outflow per Transaction:</Typography>
-                        <Typography variant="h6">{avgOutPerTxn.toLocaleString(undefined, {minimumFractionDigits: 2})} €</Typography>
+                        <Typography variant="h6">{avgOutPerTxn.toLocaleString(undefined, {maximumFractionDigits: 2})} €</Typography>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Largest Inflow:</Typography>
@@ -765,50 +771,70 @@ const Home = () => {
                 </Grid>
             </Grid>
 
-            <Grid container spacing={2} sx={{ mt: 4 }}>
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 4, display: 'flex', gap: 4, minHeight: 550 }}>
-                        <Box sx={{ width: 400 }}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        sx={{
+                            p: 4,
+                            display: 'flex',
+                            gap: 4,
+                            minHeight: 550,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                        }}
+                    >
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 Outflow per Location (Pie Chart)
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
-                            <Box id="locationPieChart" sx={{ width: 400, height: 320 }} />
+                            <Box id="locationPieChart" ref={outPieChartRef} sx={{ width: '100%', height: '100%' }} />
                         </Box>
-                        <Box id="locationPieLegend" sx={{ minWidth: 200 }} />
+                        <Box id="locationPieLegend" sx={{ minWidth: 100 }} />
                     </Paper>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 4, display: 'flex', gap: 4, minHeight: 550 }}>
-                        <Box sx={{ width: 400 }}>
+
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        sx={{
+                            p: 4,
+                            display: 'flex',
+                            gap: 4,
+                            minHeight: 550,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                        }}
+                    >
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
                                 Inflow per Location (Pie Chart)
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
-                            <Box id="inflowPieChart" sx={{ width: 400, height: 320 }} />
+                            <Box id="inflowPieChart" ref={inPieChartRef} sx={{ width: '100%', height: '100%' }} />
                         </Box>
-                        <Box id="inflowPieLegend" sx={{ minWidth: 200 }} />
+                        <Box id="inflowPieLegend" sx={{ minWidth: 100 }} />
                     </Paper>
                 </Grid>
             </Grid>
 
-            <Grid container spacing={4} sx={{ mt: 4 }}>
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 4 }}>
+            <Grid container spacing={2} sx={{ mt: 2, width: '100%' }}>
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <Paper sx={{ p: 4, width: '100%', boxSizing: 'border-box', height: 500 }}>
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                             Account Inflow/Outflow (Bar Chart)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        <Box ref={barChartRef} />
+                        <Box ref={barChartRef} sx={{ width: '100%', height: 'calc(100% - 64px)' }} />
                     </Paper>
                 </Grid>
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 4 }}>
+
+                <Grid item size={{ xs: 12, md: 6 }}>
+                    <Paper sx={{ p: 4, width: '100%', boxSizing: 'border-box', height: 500 }}>
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                             Transactions per Account (Bar Chart)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        <Box ref={txnCountBarChartRef} />
+                        <Box ref={txnCountBarChartRef} sx={{ width: '100%', height: 'calc(100% - 64px)' }} />
                     </Paper>
                 </Grid>
             </Grid>
