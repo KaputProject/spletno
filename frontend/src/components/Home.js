@@ -809,7 +809,7 @@ const Home = () => {
                             <Divider sx={{ mb: 2 }} />
                             <Box id="locationPieChart" ref={outPieChartRef} sx={{ width: '100%', height: '95%' }} />
                         </Box>
-                        <Box id="locationPieLegend" sx={{ minWidth: 100 }} />
+                        <Box id="locationPieLegend" sx={{ minWidth: 80, maxWidth: '30%' }} />
                     </Paper>
                 </Grid>
 
@@ -831,7 +831,7 @@ const Home = () => {
                             <Divider sx={{ mb: 2 }} />
                             <Box id="inflowPieChart" ref={inPieChartRef} sx={{ width: '100%', height: '95%' }} />
                         </Box>
-                        <Box id="inflowPieLegend" sx={{ minWidth: 100 }} />
+                        <Box id="inflowPieLegend" sx={{ minWidth: 80, maxWidth: '30%' }} />
                     </Paper>
                 </Grid>
             </Grid>
