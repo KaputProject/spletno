@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import StatementListItem from "../statement/ListItem";
 import TransactionListItem from "../transaction/ListItem";
+import UploadModal from '../statement/Upload';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -29,6 +30,8 @@ const AccountShow = () => {
     const [sortByChange, setSortByChange] = useState(null);
     const [sortByDate, setSortByDate] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
 
     useEffect(() => {
@@ -173,12 +176,15 @@ const AccountShow = () => {
                         <Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                 <Typography variant="h6">Statements</Typography>
-                                <Button
-                                    variant="contained"
-                                    onClick={() => navigate(`/accounts/${id}/statements/create`)}
-                                >
-                                    Add Statement
-                                </Button>
+                                <ButtonGroup>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => setPdfModalOpen(true)}
+                                    >
+                                        Upload PDF
+                                    </Button>
+                                </ButtonGroup>
+
                             </Box>
 
                             {account.statements && account.statements.length > 0 ? (
@@ -279,6 +285,7 @@ const AccountShow = () => {
                     </Grid>
                 </Grid>
             </Box>
+            <UploadModal open={pdfModalOpen} onClose={() => setPdfModalOpen(false)} />
         </Box>
     );
 };

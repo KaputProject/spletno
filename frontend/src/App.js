@@ -26,7 +26,7 @@ import LocationCreate from './components/location/Create';
 import LocationShow from './components/location/Show';
 import LocationUpdate from './components/location/Update';
 
-import StatementCreate from './components/statement/Create';
+import StatementCreate from './components/statement/Upload';
 import StatementShow from "./components/statement/Show";
 import StatementUpdate from "./components/statement/Update";
 
