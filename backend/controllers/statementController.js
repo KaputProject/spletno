@@ -243,8 +243,6 @@ module.exports = {
                 }
             }
 
-            console.log(parsedTransactions.length);
-
             // Vrni uspešen odgovor
             res.status(200).json({
                 message: 'Datoteka uspešno naložena in posredovana',
@@ -328,7 +326,7 @@ module.exports = {
                             json: () => {
                             }, send: () => {
                             }
-                        }) // dummy res
+                        })
                     });
                 }
             }

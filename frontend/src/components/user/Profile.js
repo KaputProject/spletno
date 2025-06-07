@@ -33,6 +33,7 @@ const Profile = () => {
         surname: '',
         email: '',
         dateOfBirth: '',
+        identifier: '',
         password: '',
         confirmPassword: '',
         avatar: null,
@@ -52,6 +53,7 @@ const Profile = () => {
                 surname: user.surname || '',
                 email: user.email || '',
                 dateOfBirth: user.dateOfBirth?.substring(0, 10) || '',
+                identifier: user.identifier || '',
                 password: '',
                 confirmPassword: '',
                 avatar: null,
@@ -194,7 +196,7 @@ const Profile = () => {
                 <TextField fullWidth label="Surname" name="surname" value={formData.surname} onChange={handleChange} sx={{ mt: 2 }} />
                 <TextField fullWidth label="Email" name="email" type="email" value={formData.email} onChange={handleChange} sx={{ mt: 2 }} />
                 <TextField fullWidth label="Date of Birth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} sx={{ mt: 2 }} InputLabelProps={{ shrink: true }} />
-
+                <TextField fullWidth label="Identifier" name="identifier" value={formData.identifier} onChange={handleChange} sx={{ mt: 2 }} />
                 <TextField fullWidth label="New Password" name="password" type="password" value={formData.password} onChange={handleChange} sx={{ mt: 2 }} />
                 <TextField fullWidth label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} sx={{ mt: 2 }} />
 
