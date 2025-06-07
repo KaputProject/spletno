@@ -135,9 +135,11 @@ const Home = () => {
             }
         }
 
-        const width = 1000, height = 500;
+        const container = sankeyChartRef.current;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
 
-        const svg = d3.select(sankeyChartRef.current)
+        const svg = d3.select(container)
             .html('')
             .append('svg')
             .attr('width', width)
@@ -574,7 +576,6 @@ const Home = () => {
 
     return (
         <Box sx={{ width: '100%', mt: 2, px: 2 }}>
-            {/* Summary Section */}
             <Paper sx={{ p: 4, mb: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 0 }}>
@@ -602,7 +603,6 @@ const Home = () => {
 
                 <Divider sx={{ mb: 2 }} />
 
-                {/* Summary Stats */}
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="subtitle1" color="text.secondary">Number of Accounts:</Typography>
@@ -677,37 +677,95 @@ const Home = () => {
                 </Grid>
             </Paper>
 
-            <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 4, height: '100%' }}>
+            <Grid
+                container
+                spacing={2}
+                sx={{
+                    flexWrap: 'nowrap',
+                    height: 800
+                }}
+            >
+                <Grid item sx={{ flex: 2, minWidth: 0, height: '100%' }}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            width: '100%',
+                            minWidth: 0,
+                        }}
+                    >
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                             Financial Flows (Sankey Diagram)
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        <Box ref={sankeyChartRef} />
+                        <Box
+                            ref={sankeyChartRef}
+                            sx={{
+                                width: '100%',
+                                minWidth: 0,
+                                height: '100%',
+                            }}
+                        />
                     </Paper>
                 </Grid>
-                <Grid item xs={12} md={6} >
-                    <Paper sx={{ p: 4, height: '100%' }}>
+
+                <Grid item sx={{ flex: 1, minWidth: 0, height: '100%' }}>
+                    <Paper
+                        sx={{
+                            p: 4,
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflowY: 'auto',
+                        }}
+                    >
                         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
                             Locations (Inflow/Outflow)
                         </Typography>
-                        <Grid container spacing={2}>
-                            {stats.locations.map(loc => (
-                                <Grid item xs={12} sm={6} key={loc._id}>
-                                    <Paper sx={{ p: 2 }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 2,
+                            }}
+                        >
+                            {stats.locations.map((loc) => (
+                                <Box
+                                    key={loc._id}
+                                    sx={{
+                                        flexGrow: 1,
+                                        flexBasis: 0,
+                                        minWidth: 150,
+                                        maxWidth: '33%',
+                                        boxSizing: 'border-box',
+                                    }}
+                                >
+                                    <Paper
+                                        sx={{
+                                            p: 2,
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                        }}
+                                    >
                                         <Typography variant="subtitle1">{loc.name}</Typography>
-                                        <Typography color="success.main">Inflow: {loc.inflow.toFixed(2)} €</Typography>
-                                        <Typography color="error.main">Outflow: {loc.outflow.toFixed(2)} €</Typography>
+                                        <Typography color="success.main">
+                                            Inflow: {loc.inflow.toFixed(2)} €
+                                        </Typography>
+                                        <Typography color="error.main">
+                                            Outflow: {loc.outflow.toFixed(2)} €
+                                        </Typography>
                                     </Paper>
-                                </Grid>
+                                </Box>
                             ))}
-                        </Grid>
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>
 
-            <Grid container spacing={4} sx={{ mt: 4 }}>
+            <Grid container spacing={2} sx={{ mt: 4 }}>
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 4, display: 'flex', gap: 4, minHeight: 550 }}>
                         <Box sx={{ width: 400 }}>
