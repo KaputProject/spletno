@@ -28,6 +28,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:testing
 
       - name: Pošlji webhook na test strežnik
+        if: success()
         uses: distributhor/workflow-webhook@v3
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL_TEST }}

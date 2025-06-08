@@ -28,6 +28,7 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod
 
       - name: Pošlji webhook na production strežnik
+        if: success()
         uses: distributhor/workflow-webhook@v3
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL_PROD }}
