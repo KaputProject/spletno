@@ -16,16 +16,16 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build frontend image (test)
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:testing -f frontend/DockerFile.frontend frontend
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev -f frontend/DockerFile.frontend frontend
 
       - name: Build backend image (test)
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:testing -f backend/DockerFile.backend backend
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev -f backend/DockerFile.backend backend
 
       - name: Push frontend image (test)
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:testing
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev
 
       - name: Push backend image (test)
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:testing
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev
 
       - name: Pošlji webhook na test strežnik
         uses: distributhor/workflow-webhook@v3
