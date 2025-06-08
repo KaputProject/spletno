@@ -141,8 +141,6 @@ module.exports = {
                 }
             }
 
-            console.log(req.body);
-
             const user = new UserModel({
                 username: req.body.username,
                 password: bcrypt.hashSync(req.body.password, 10),
@@ -454,5 +452,16 @@ module.exports = {
             console.error("Napaka v getUserStatistics:", err.message, err.stack);
             res.status(500).json({ error: 'Napaka pri pridobivanju statistike' });
         }
+    },
+
+    /**
+     * Used for unit testing purposes
+     *
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    echo: async function (req, res) {
+        return res.status(200).json({ received: req.body });
     }
 };

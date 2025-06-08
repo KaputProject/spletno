@@ -28,6 +28,7 @@ const Home = () => {
                         `${process.env.REACT_APP_BACKEND_URL}/users/${user._id}/statistics`,
                         { headers: { 'Authorization': `Bearer ${token}` } }
                     );
+
                     setStats(response.data.user);
                 } catch (err) {
                     console.error("Error fetching statistics:", err.response?.data || err.message);
