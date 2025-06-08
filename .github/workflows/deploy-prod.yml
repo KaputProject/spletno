@@ -1,0 +1,37 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kodo
+        uses: actions/checkout@v3
+
+      - name: Prijava v Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build frontend image (prod)
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:prod -f frontend/DockerFile.frontend frontend
+
+      - name: Build backend image (prod)
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod -f backend/DockerFile.backend backend
+
+      - name: Push frontend image (prod)
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:prod
+
+      - name: Push backend image (prod)
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod
+
+      - name: Pošlji webhook na production strežnik
+        uses: distributhor/workflow-webhook@v3
+        with:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          method: POST
+          body: '{ "environment": "production", "status": "updated" }'
+          headers: |
+            X-SECRET-TOKEN: ${{ secrets.SECRET_TOKEN }}
