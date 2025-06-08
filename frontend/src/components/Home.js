@@ -166,6 +166,11 @@ const Home = () => {
             .attr('width', width)
             .attr('height', height);
 
+        if (data.nodes.length === 0 || data.links.length === 0) {
+            console.error('Sankey input data is empty or malformed', data);
+            return;
+        }
+
         const sankeyGenerator = sankey()
             .nodeWidth(15)
             .nodePadding(10)
@@ -762,7 +767,7 @@ const Home = () => {
                                     sx={{
                                         flexGrow: 1,
                                         flexBasis: 0,
-                                        minWidth: 150,
+                                        minWidth: 120,
                                         maxWidth: '33%',
                                         boxSizing: 'border-box',
                                     }}
