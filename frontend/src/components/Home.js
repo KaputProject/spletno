@@ -439,6 +439,8 @@ const Home = () => {
         const legend = d3.select('#locationPieLegend')
             .style('display', 'flex')
             .style('flex-direction', 'column')
+            .style('max-height', '550px')
+            .style('overflow-y', 'auto')
             .style('margin-left', '24px');
         data.forEach((d, i) => {
             const item = legend.append('div')
@@ -519,6 +521,8 @@ const Home = () => {
         const legend = d3.select('#inflowPieLegend')
             .style('display', 'flex')
             .style('flex-direction', 'column')
+            .style('max-height', '550px')
+            .style('overflow-y', 'auto')
             .style('margin-left', '24px');
         data.forEach((d, i) => {
             const item = legend.append('div')

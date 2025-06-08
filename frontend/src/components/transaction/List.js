@@ -107,6 +107,11 @@ const TransactionList = () => {
         .filter((tx) => tx.change > 0 && tx.outgoing)
         .sort((a, b) => b.change - a.change)[0];
 
+    const extendedLocations = [
+        { _id: "", name: "All Locations" },
+        { _id: "no_location", name: "No Location" },
+        ...uniqueLocations,
+    ];
 
     if (loading) {
         return (
@@ -173,9 +178,9 @@ const TransactionList = () => {
                                 <Autocomplete
                                     size="small"
                                     sx={{ minWidth: 170 }}
-                                    options={uniqueLocations}
+                                    options={extendedLocations}
                                     getOptionLabel={(option) => option.name}
-                                    value={uniqueLocations.find((loc) => loc._id === locationFilter) || null}
+                                    value={extendedLocations.find((loc) => loc._id === locationFilter) || null}
                                     onChange={(event, newValue) => {
                                         setLocationFilter(newValue ? newValue._id : "");
                                     }}
