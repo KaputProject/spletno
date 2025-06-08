@@ -33,7 +33,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - ./Caddyfile:/etc/caddy/caddyFile
+      - ./Caddyfile:/etc/caddy/Caddyfile
     depends_on:
       - frontend
       - backend
