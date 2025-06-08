@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TransactionListItem from './ListItem';
 import TransactionSummary from './Summary';
+import Autocomplete from '@mui/material/Autocomplete';
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -61,9 +62,15 @@ const TransactionList = () => {
     ];
 
     const filteredAndSortedTransactions = transactions
-        .filter((tx) =>
-            locationFilter ? tx.location?._id === locationFilter : true
-        )
+        .filter((tx) => {
+            if (!locationFilter) return true;
+
+            if (locationFilter === 'no_location') {
+                return !tx.location;
+            }
+
+            return tx.location?._id === locationFilter;
+        })
         .filter((tx) => {
             const lowerQuery = searchQuery.toLowerCase();
             const locationName = tx.location?.name?.toLowerCase() || '';
@@ -100,6 +107,11 @@ const TransactionList = () => {
         .filter((tx) => tx.change > 0 && tx.outgoing)
         .sort((a, b) => b.change - a.change)[0];
 
+    const extendedLocations = [
+        { _id: "", name: "All Locations" },
+        { _id: "no_location", name: "No Location" },
+        ...uniqueLocations,
+    ];
 
     if (loading) {
         return (
@@ -163,22 +175,23 @@ const TransactionList = () => {
                                     mb: 2,
                                 }}
                             >
-                                <FormControl sx={{ minWidth: 170 }} size="small">
-                                    <InputLabel id="location-filter-label">Filter by Location</InputLabel>
-                                    <Select
-                                        labelId="location-filter-label"
-                                        value={locationFilter}
-                                        label="Filter by Location"
-                                        onChange={(e) => setLocationFilter(e.target.value)}
-                                    >
-                                        <MenuItem value="">All Locations</MenuItem>
-                                        {uniqueLocations.map((loc) => (
-                                            <MenuItem key={loc._id} value={loc._id}>
-                                                {loc.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                <Autocomplete
+                                    size="small"
+                                    sx={{ minWidth: 170 }}
+                                    options={extendedLocations}
+                                    getOptionLabel={(option) => option.name}
+                                    value={extendedLocations.find((loc) => loc._id === locationFilter) || null}
+                                    onChange={(event, newValue) => {
+                                        setLocationFilter(newValue ? newValue._id : "");
+                                    }}
+                                    isOptionEqualToValue={(option, value) => option._id === value._id}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Filter by Location" variant="outlined" />
+                                    )}
+                                    clearOnEscape
+                                    includeInputInList
+                                    autoHighlight
+                                />
 
                                 <TextField
                                     label="Search"

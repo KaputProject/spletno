@@ -62,23 +62,20 @@ function App() {
         signOut: logout,
     };
 
-    // TODO: Fix the fact that only Home is always highlighted
     const navigation = [
-        { kind: 'header', title: 'Main' },
-        { segment: '', title: 'Home', icon: <HomeIcon /> },
+        { segment: 'dashboard', title: 'Dashboard', icon: <HomeIcon /> },
 
         ...(user
             ? [
-                { kind: 'header', title: 'User' },
-                { segment: 'profile', title: 'Profile', icon: <PersonIcon />},
-
                 { kind: 'header', title: 'General' },
-                { segment: 'accounts', title: 'My Accounts', icon: <AccountBalanceWalletIcon />},
-                { segment: 'locations', title: 'My Locations', icon: <LocationOnIcon />},
-                { segment: 'transactions', title: 'My Transactions', icon: <PaymentIcon />}
+                { segment: 'accounts', title: 'My Accounts', icon: <AccountBalanceWalletIcon /> },
+                { segment: 'locations', title: 'My Locations', icon: <LocationOnIcon /> },
+                { segment: 'transactions', title: 'My Transactions', icon: <PaymentIcon /> },
 
-            ] : []
-        ),
+                { kind: 'header', title: 'User' },
+                { segment: 'profile', title: 'Profile', icon: <PersonIcon /> },
+            ]
+            : []),
     ];
 
     // TODO: Make sure that the navbar stays either extender or in short version after navigation
@@ -88,13 +85,17 @@ function App() {
             authentication={authentication}
             navigation={navigation}
         >
-            <DashboardLayout branding={{ title: 'Kaput', homeUrl: '/' }}>
+            <DashboardLayout branding={{
+                logo: <img src="/logo.png" alt="Logo" />,
+                title: 'Kaput',
+                homeUrl: '/dashboard'
+            }}>
                 <LoadScript
                     googleMapsApiKey={GOOGLE_MAPS_API_KEY}
                     libraries={['places', 'visualization']}
                 >
                     <Routes location={location}>
-                        <Route path="/" element={<Home />} />
+                        <Route path="/dashboard" element={<Home />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />

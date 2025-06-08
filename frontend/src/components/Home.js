@@ -166,6 +166,11 @@ const Home = () => {
             .attr('width', width)
             .attr('height', height);
 
+        if (data.nodes.length === 0 || data.links.length === 0) {
+            console.error('Sankey input data is empty or malformed', data);
+            return;
+        }
+
         const sankeyGenerator = sankey()
             .nodeWidth(15)
             .nodePadding(10)
@@ -434,6 +439,8 @@ const Home = () => {
         const legend = d3.select('#locationPieLegend')
             .style('display', 'flex')
             .style('flex-direction', 'column')
+            .style('max-height', '550px')
+            .style('overflow-y', 'auto')
             .style('margin-left', '24px');
         data.forEach((d, i) => {
             const item = legend.append('div')
@@ -514,6 +521,8 @@ const Home = () => {
         const legend = d3.select('#inflowPieLegend')
             .style('display', 'flex')
             .style('flex-direction', 'column')
+            .style('max-height', '550px')
+            .style('overflow-y', 'auto')
             .style('margin-left', '24px');
         data.forEach((d, i) => {
             const item = legend.append('div')
@@ -762,7 +771,7 @@ const Home = () => {
                                     sx={{
                                         flexGrow: 1,
                                         flexBasis: 0,
-                                        minWidth: 150,
+                                        minWidth: 120,
                                         maxWidth: '33%',
                                         boxSizing: 'border-box',
                                     }}

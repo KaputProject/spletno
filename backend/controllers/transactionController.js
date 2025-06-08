@@ -36,6 +36,14 @@ module.exports = {
                 year: year
             });
 
+            let existingTransaction = await TransactionModel.findOne({ reference: data.reference, user: user._id, account: account._id });
+            if (existingTransaction) {
+                return {
+                    message: 'Transaction already exists',
+                    transaction: existingTransaction
+                };
+            }
+
             // If not, a new one is created
             if (!statement) {
                 statement = new StatementModel({
