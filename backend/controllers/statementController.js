@@ -213,11 +213,11 @@ module.exports = {
             formData.append('metadata', JSON.stringify(locations));
 
             // Pošlji POST zahtevek na Kotlin server
-            const response = await axios.post('http://localhost:5001/upload', formData, {
+            const response = await axios.post(process.env.PRINCIPI_URL + '/upload', formData, {
                 headers: {
                     ...formData.getHeaders(),
                 },
-                timeout: 10000, // 10 sekundni timeout
+                timeout: parseInt(process.env.PRINCIPI_TIMEOUT, 10000),
             });
 
             const transactions = response.data.statement?.transactions || [];
