@@ -34,6 +34,7 @@ import TransactionList from './components/transaction/List';
 import TransactionCreate from './components/transaction/Create';
 import TransactionShow from './components/transaction/Show';
 import TransactionParsed from './components/transaction/Parsed';
+import TransactionUpdate from './components/transaction/Update';
 
 
 import { LoadScript } from '@react-google-maps/api';
@@ -116,6 +117,7 @@ function App() {
                         <Route path="/transactions/create" element={<TransactionCreate />} />
                         <Route path="/transactions/:id" element={<TransactionShow />} />
                         <Route path="/transactions/parsed" element={<TransactionParsed />} />
+                        <Route path="/transactions/:id/update" element={<TransactionUpdate />} />
 
                         <Route path="/statements/:id" element={<StatementShow />} />
                         <Route path="/statements/:id/Update" element={<StatementUpdate />} />

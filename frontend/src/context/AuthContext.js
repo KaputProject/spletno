@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             setToken(newToken);
             setUser(response.data.user);
 
-            navigate('/');
+            navigate('/dashboard');
 
             return { success: true };
         } catch (error) {

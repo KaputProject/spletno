@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
     Box,
@@ -12,13 +12,10 @@ import {
 
 const URL = process.env.REACT_APP_BACKEND_URL;
 
-const TransactionCreate = () => {
+const TransactionUpdate = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
     const token = localStorage.getItem('token');
-
-    const queryParams = new URLSearchParams(location.search);
-    const prefilledAccountId = queryParams.get('account');
 
     const [accounts, setAccounts] = useState([]);
     const [locations, setLocations] = useState([]);
@@ -36,6 +33,50 @@ const TransactionCreate = () => {
         location_parsed: ''
     });
 
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const [accountsRes, locationsRes, transactionRes] = await Promise.all([
+                    axios.get(`${URL}/accounts`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get(`${URL}/locations`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    axios.get(`${URL}/transactions/${id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                ]);
+
+                setAccounts(accountsRes.data.accounts || []);
+                setLocations(locationsRes.data.locations || []);
+
+                const tx = transactionRes.data.transaction;
+                setForm({
+                    user: tx.user || '',
+                    account: tx.account || '',
+                    datetime: tx.datetime?.slice(0, 16) || '',
+                    location: tx.location || '',
+                    description: tx.description || '',
+                    change: tx.change || '',
+                    balanceAfter: tx.balanceAfter || '',
+                    outgoing: tx.outgoing,
+                    known_location: tx.known_location || false,
+                    location_parsed: tx.location_parsed || ''
+                });
+            } catch (err) {
+                console.error('Error loading data:', err);
+            }
+        };
+
+        fetchData();
+    }, [id, token, navigate]);
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm({
@@ -48,7 +89,7 @@ const TransactionCreate = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${URL}/transactions`, {
+            await axios.put(`${URL}/transactions/${id}`, {
                 ...form,
                 change: parseFloat(form.change),
                 balanceAfter: parseFloat(form.balanceAfter),
@@ -56,38 +97,11 @@ const TransactionCreate = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            navigate(`/transactions/${response.data.transaction._id}`);
+            navigate(`/transactions/${id}`);
         } catch (err) {
-            console.error('Error creating transaction:', err);
+            console.error('Error updating transaction:', err);
         }
     };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [accountsRes, locationsRes] = await Promise.all([
-                    axios.get(`${URL}/accounts`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }),
-                    axios.get(`${URL}/locations`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }),
-                ]);
-
-                setAccounts(accountsRes.data.accounts || []);
-                setLocations(locationsRes.data.locations || []);
-            } catch (err) {
-                console.error('Error fetching data:', err);
-            }
-        };
-
-        fetchData();
-    }, [token, navigate]);
-
-    if (!token) {
-        navigate('/login');
-        return;
-    }
 
     return (
         <Box sx={{ width: '100%', mt: 2, px: 2 }}>
@@ -103,11 +117,11 @@ const TransactionCreate = () => {
                 }}
             >
                 <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
-                    Create a New Transaction
+                    Update Transaction
                 </Typography>
 
                 <Typography sx={{ mb: 4 }}>
-                    Fill in the transaction details below.
+                    Update the transaction details below.
                 </Typography>
 
                 <Paper elevation={2} sx={{ p: 3, borderRadius: 2, textAlign: 'left' }}>
@@ -193,7 +207,7 @@ const TransactionCreate = () => {
                         </TextField>
 
                         <Button type="submit" variant="contained" color="primary" fullWidth>
-                            Create Transaction
+                            Update Transaction
                         </Button>
                     </form>
                 </Paper>
@@ -202,4 +216,4 @@ const TransactionCreate = () => {
     );
 };
 
-export default TransactionCreate;
+export default TransactionUpdate;
