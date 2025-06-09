@@ -41,4 +41,9 @@ router.put('/:id', authenticate, upload.single('avatar'), userController.update)
  */
 router.delete('/:id', authenticate, userController.remove);
 
+/*
+ * POST
+ */
+router.post('/echo', userController.echo);
+
 module.exports = router;
