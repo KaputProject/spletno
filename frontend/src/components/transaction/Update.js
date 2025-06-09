@@ -59,9 +59,9 @@ const TransactionUpdate = () => {
                 const tx = transactionRes.data.transaction;
                 setForm({
                     user: tx.user || '',
-                    account: tx.account || '',
+                    account: tx.account._id || '',
                     datetime: tx.datetime?.slice(0, 16) || '',
-                    location: tx.location || '',
+                    location: tx.location._id || '',
                     description: tx.description || '',
                     change: tx.change || '',
                     balanceAfter: tx.balanceAfter || '',
