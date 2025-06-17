@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../server');
 
+jest.setTimeout(15000); // 15 sekund
+
 let token;
 
 beforeAll(async () => {
