@@ -32,7 +32,9 @@ jobs:
         uses: distributhor/workflow-webhook@v3
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL_TEST }}
-          method: POST
-          body: '{ "environment": "testing", "status": "updated" }'
-          headers: |
-            X-SECRET-TOKEN: ${{ secrets.SECRET_TOKEN }}
+          webhook_secret: ${{ secrets.SECRET_TOKEN }}
+          data: |
+            {
+              "environment": "testing",
+              "status": "updated"
+            }
