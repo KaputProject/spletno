@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile.backend.prod
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - /srv/envs/backend.env
     depends_on:
       - mongo
     ports:
@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile.frontend.prod
     restart: unless-stopped
     env_file:
-      - ./frontend/.env
+      - /srv/envs/frontend.env
     depends_on:
       - backend
     ports:
