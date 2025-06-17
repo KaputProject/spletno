@@ -6,7 +6,9 @@ services:
       - kaput-data:/data/db
 
   backend:
-    image: davidgucci/spletno-backend-dev:prod
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend.prod
     restart: unless-stopped
     env_file:
       - ./backend/.env
@@ -16,7 +18,9 @@ services:
       - "5000:5000"
 
   frontend:
-    image: davidgucci/spletno-frontend-dev:prod
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend.prod
     restart: unless-stopped
     env_file:
       - ./frontend/.env

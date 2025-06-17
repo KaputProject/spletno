@@ -16,10 +16,10 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build frontend image (prod)
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:prod -f frontend/DockerFile.frontend frontend
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:prod -f frontend/DockerFile.frontend.prod frontend
 
       - name: Build backend image (prod)
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod -f backend/DockerFile.backend backend
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod -f backend/DockerFile.backend.prod backend
 
       - name: Push frontend image (prod)
         run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-frontend-dev:prod
@@ -28,10 +28,13 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/spletno-backend-dev:prod
 
       - name: Pošlji webhook na production strežnik
+        if: success()
         uses: distributhor/workflow-webhook@v3
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL_PROD }}
-          method: POST
-          body: '{ "environment": "production", "status": "updated" }'
-          headers: |
-            X-SECRET-TOKEN: ${{ secrets.SECRET_TOKEN }}
+          webhook_secret: ${{ secrets.SECRET_TOKEN }}
+          data: |
+            {
+              "environment": "production",
+              "status": "updated"
+            }
