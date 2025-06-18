@@ -1,1 +1,1 @@
-# spletno
+https://github.com/KaputProject/spletno/wiki
