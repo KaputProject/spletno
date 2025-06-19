@@ -1,12 +1,16 @@
-/*
+/*// backend/tests/user.validate.test.js
 const request = require('supertest');
+const mongoose = require('mongoose');
 const app = require('../server');
 
-jest.setTimeout(15000); // 15 sekund
+jest.setTimeout(15000);
 
 let token;
 
 beforeAll(async () => {
+    // Clean up test user if exists
+    await mongoose.connection.collection('users').deleteMany({ username: 'secureuser' });
+
     await request(app).post('/users/create').send({
         username: 'secureuser',
         password: 'Secure123!',
@@ -22,6 +26,11 @@ beforeAll(async () => {
     });
 
     token = res.body.token;
+});
+
+afterAll(async () => {
+    await mongoose.connection.collection('users').deleteMany({ username: 'secureuser' });
+    await mongoose.disconnect();
 });
 
 describe('Token Validation', () => {
@@ -47,5 +56,4 @@ describe('Token Validation', () => {
 
         expect(res.statusCode).toBe(403);
     });
-});
-*/
+});*/

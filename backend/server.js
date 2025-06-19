@@ -3,29 +3,32 @@ const cors = require('cors');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv').config();
-const jwt = require("jsonwebtoken");
+const dotenv = require('dotenv');
 const morgan = require('morgan');
 const { join } = require("node:path");
 
+// Naloži ustrezno .env datoteko
+dotenv.config({
+    path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env'
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Load Routes
-const userRouter = require('./routes/userRoutes');
-const accountRouter = require('./routes/accountRoutes');
-const statementRouter = require('./routes/statementRoutes');
-const transactionRouter = require('./routes/transactionRoutes');
-const locationRouter = require('./routes/locationRoutes');
-
 const mongoDB = process.env.MONGO_URI;
 
-// Mongo connect only if NOT in test environment
-if (process.env.NODE_ENV !== 'test') {
-    mongoose.connect(mongoDB)
-        .then(() => console.log('MongoDB connected'))
-        .catch(err => console.error('MongoDB connection error:', err));
-}
+// Poveži MongoDB (tudi v testnem okolju)
+mongoose.connect(mongoDB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+    .then(() => {
+        if (process.env.NODE_ENV !== 'test') {
+            console.log('MongoDB connected');
+        }
+    })
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+    });
 
 // Middleware
 app.use(cors({
@@ -35,7 +38,7 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Session only if NOT in test environment
+// Seje (izklopljene med testiranjem)
 if (process.env.NODE_ENV !== 'test') {
     app.use(session({
         secret: 'work hard',
@@ -48,17 +51,24 @@ if (process.env.NODE_ENV !== 'test') {
     }));
 }
 
-// Static files
+// Statika (za avatarje)
 app.use(express.static(join(__dirname, 'public')));
 
-// Routes
+// Naloži rute
+const userRouter = require('./routes/userRoutes');
+const accountRouter = require('./routes/accountRoutes');
+const statementRouter = require('./routes/statementRoutes');
+const transactionRouter = require('./routes/transactionRoutes');
+const locationRouter = require('./routes/locationRoutes');
+
+// API rute
 app.use('/users', userRouter);
 app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
 app.use('/locations', locationRouter);
 
-// Error Handler
+// Globalni error handler
 app.use((err, req, res, next) => {
     console.error('--- ERROR START ---');
     console.error(`Error Message: ${err.message}`);
@@ -71,12 +81,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server only if NOT in test
+// Zaženi strežnik le izven testnega okolja
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
+        console.log(`🚀 Server running on port ${PORT}`);
     });
 }
 
-// Export app for testing
+// Izvozi app za testiranje
 module.exports = app;
