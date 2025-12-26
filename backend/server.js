@@ -60,6 +60,7 @@ const accountRouter = require('./routes/accountRoutes');
 const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
 const locationRouter = require('./routes/locationRoutes');
+const familyRouter = require('./routes/familyRoutes');
 
 // API rute
 app.use('/users', userRouter);
@@ -67,6 +68,7 @@ app.use('/accounts', accountRouter);
 app.use('/statements', statementRouter);
 app.use('/transactions', transactionRouter);
 app.use('/locations', locationRouter);
+app.use('/family', familyRouter);
 
 // Globalni error handler
 app.use((err, req, res, next) => {

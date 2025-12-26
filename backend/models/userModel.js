@@ -46,6 +46,11 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'location'
     }],
+
+    'family': {
+        type: Schema.Types.ObjectId,
+        ref: 'family'
+    }
 });
 
 module.exports = mongoose.model('user', userSchema);
