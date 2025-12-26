@@ -18,4 +18,9 @@ router.post('/', authenticate, familyController.create);
  */
 router.put('/:id', authenticate, familyController.addUser);
 
+/*
+ * GET
+ */
+router.get('/:id/statistics', authenticate, familyController.getStatistics);
+
 module.exports = router;
