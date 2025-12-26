@@ -69,39 +69,37 @@ module.exports = {
             });
         }
     },
-    //
-    // /**
-    //  * Update an existing account
-    //  */
-    // update: async function (req, res) {
-    //     try {
-    //         const account = await FamilyModel.findById(req.params.id);
-    //
-    //         if (!account) {
-    //             return res.status(404).json({ message: 'No such account found' });
-    //         }
-    //
-    //         if (!isOwner(account, req.user)) {
-    //             return res.status(403).json({ message: 'Forbidden: Not the account owner' });
-    //         }
-    //
-    //         account.iban = req.body.iban ?? account.iban;
-    //         account.currency = req.body.currency ?? account.currency;
-    //         account.balance = req.body.balance ?? account.balance;
-    //
-    //         const updatedAccount = await account.save();
-    //
-    //         res.json({
-    //             message: 'Account updated successfully',
-    //             account: updatedAccount
-    //         });
-    //     } catch (err) {
-    //         res.status(500).json({
-    //             message: 'Error when updating account.',
-    //             error: err
-    //         });
-    //     }
-    // },
+
+    /**
+     * Adds an user to the family
+     */
+    addUser: async function (req, res) {
+        try {
+            const family = await FamilyModel.findById(req.params.id);
+
+            if (!family) {
+                return res.status(404).json({ message: 'No such family found' });
+            }
+
+            if (family.users.includes(req.params.id)) {
+                return res.status(400).json({ message: 'User is already a member of this family' });
+            }
+
+            family.users.push(req.params.id);
+
+            const updatedFamily = await family.save();
+
+            res.json({
+                message: 'Family member added successfully',
+                account: updatedFamily
+            });
+        } catch (err) {
+            res.status(500).json({
+                message: 'Error when adding family member.',
+                error: err
+            });
+        }
+    },
     //
     // /**
     //  * Delete an account

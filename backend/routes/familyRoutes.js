@@ -12,15 +12,10 @@ router.get('/', authenticate, familyController.get);
  * POST
  */
 router.post('/', authenticate, familyController.create);
-//
-// /*
-//  * PUT
-//  */
-// router.put('/', authenticate, familyController.addUser);
-//
-// /*
-//  * DELETE
-//  */
-// router.delete('/', authenticate, familyController.remove);
+
+/*
+ * PUT
+ */
+router.put('/:id', authenticate, familyController.addUser);
 
 module.exports = router;
