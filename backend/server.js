@@ -109,7 +109,7 @@ mqttClient.on('connect', () => {
 
 mqttClient.on('message', (topic, message) => {
     if (topic === 'kaput/upload') {
-        console.log('Processing upload data...');
+        console.log('Received data on kaput/upload, processing statement...');
         processMQTTStatement(message);
     }
     // else if (topic === 'kaput/simulate') {
