@@ -63,6 +63,7 @@ const statementRouter = require('./routes/statementRoutes');
 const transactionRouter = require('./routes/transactionRoutes');
 const locationRouter = require('./routes/locationRoutes');
 const familyRouter = require('./routes/familyRoutes');
+const {processMQTTStatement} = require("./controllers/statementController");
 
 // API rute
 app.use('/users', userRouter);
@@ -102,18 +103,20 @@ mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker');
 
     mqttClient.subscribe('kaput/upload');
-    mqttClient.subscribe('kaput/simulate');
-    mqttClient.subscribe('kaput/event');
+    // mqttClient.subscribe('kaput/simulate');
+    // mqttClient.subscribe('kaput/event');
 })
 
 mqttClient.on('message', (topic, message) => {
     if (topic === 'kaput/upload') {
         console.log('Processing upload data...');
-    } else if (topic === 'kaput/simulate') {
-        console.log('Processing simulation data...');
-    } else if (topic === 'kaput/event') {
-        console.log('Processing event data...');
+        processMQTTStatement(message);
     }
+    // else if (topic === 'kaput/simulate') {
+    //     console.log('Forwarding simulation data...');
+    // } else if (topic === 'kaput/event') {
+    //     console.log('Processing event data...');
+    // }
 });
 
 mqttClient.on('error', (err) => {

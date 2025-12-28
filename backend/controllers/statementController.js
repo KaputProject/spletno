@@ -340,4 +340,41 @@ module.exports = {
             });
         }
     },
+
+    /**
+     * statementController.processMQTTStatement()
+     *
+     * @param message
+     * @returns {Promise<void>}
+     */
+    processMQTTStatement: async (message) => {
+        try {
+            const data = JSON.parse(message.toString());
+
+            const account = await AccountModel.findOne({iban: data.iban}).populate('user');
+            if (!account) {
+                console.error(`Account with IBAN: "${data.iban}" not found, please create it first.`);
+                return;
+            }
+
+            const user = account.user;
+
+            const parsedTransactions = []
+            for (const transaction of data.statement.transactions) {
+                try {
+                    const result = await transactionController.parse(transaction, data.statement.iban, user);
+
+                    if (result.transaction) {
+                        parsedTransactions.push(result.transaction);
+                    }
+                } catch (err) {
+                    console.error('Transaction parse failed:', err.message);
+                }
+            }
+
+            console.log('Parsed transactions from MQTT statement:', parsedTransactions.length);
+        } catch (err) {
+            console.error('Error processing statement from MQTT:', err);
+        }
+    }
 };
