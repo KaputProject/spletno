@@ -81,11 +81,11 @@ module.exports = {
                 return res.status(404).json({ message: 'No such family found' });
             }
 
-            if (family.users.includes(req.params.id)) {
+            if (family.users.includes(req.body.user)) {
                 return res.status(400).json({ message: 'User is already a member of this family' });
             }
 
-            family.users.push(req.params.id);
+            family.users.push(req.body.user);
 
             const updatedFamily = await family.save();
 
