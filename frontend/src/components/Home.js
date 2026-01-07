@@ -544,7 +544,7 @@ const Home = () => {
 
     if (!user) {
         return (
-            <Box sx={{ textAlign: 'center', p: 4, borderRadius: 4, boxShadow: 3 }}>
+            <Box sx={{ textAlign: 'center', p: 4, borderRadius: 4, boxShadow: 3, m: 2 }}>
                 <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Welcome to Kaput
                 </Typography>

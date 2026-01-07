@@ -335,7 +335,11 @@ module.exports = {
                     name: loc.name,
                     inflow: loc.total_received || 0,
                     outflow: loc.total_spent || 0,
-                    number_of_transactions: 0 // will be counted below
+                    number_of_transactions: 0,
+                    lat: loc.lat || null,
+                    lng: loc.lng || null,
+                    identifier: loc.identifier || null,
+                    address: loc.address || null
                 };
             }
 
