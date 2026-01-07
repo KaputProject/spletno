@@ -102,16 +102,120 @@ module.exports = {
     },
 
     getStatistics: async function (req, res) {
-        let output = [];
         try {
             const family = await FamilyModel.findById(req.params.id).populate('users');
 
             if (!family) {
-                return res.status(404).json({message: 'No such family found'});
+                return res.status(404).json({ message: 'No such family found' });
             }
 
-            for (const userId of family.users) {
-                const user = await UserModel.findById(userId)
+            // Collect family members list
+            const familyMembers = (family.users || []).map(u => ({
+                _id: u._id ? u._id : u,
+                username: u.username || null
+            }));
+
+            // Map of grouped locations
+            const locMap = {}; // key -> { meta..., total_inflow, total_outflow, number_of_transactions, users: { userId: {...} } }
+
+            const processTxnForLocation = (loc, user, inflow, outflow) => {
+                if (!loc) return;
+
+                const groupKey = loc.identifier
+                    ? `identifier:${loc.identifier}`
+                    : loc.address
+                        ? `address:${loc.address}`
+                        : `id:${loc._id?.toString() || ''}`;
+
+                if (!locMap[groupKey]) {
+                    locMap[groupKey] = {
+                        _id: loc._id || null,
+                        name: loc.name || null,
+                        lat: loc.lat || null,
+                        lng: loc.lng || null,
+                        address: loc.address || null,
+                        identifier: loc.identifier || null,
+                        total_inflow: 0,
+                        total_outflow: 0,
+                        number_of_transactions: 0,
+                        users: {}
+                    };
+                }
+
+                const entry = locMap[groupKey];
+                entry.total_inflow += inflow;
+                entry.total_outflow += outflow;
+                entry.number_of_transactions += 1;
+
+                const uid = user._id.toString();
+                if (!entry.users[uid]) {
+                    entry.users[uid] = {
+                        userId: uid,
+                        username: user.username || null,
+                        numbOfTrans: 0,
+                        inflow: 0,
+                        outflow: 0
+                    };
+                }
+
+                entry.users[uid].numbOfTrans += 1;
+                entry.users[uid].inflow += inflow;
+                entry.users[uid].outflow += outflow;
+            };
+
+            const processSavedLocationForUser = (loc, user) => {
+                if (!loc) return;
+
+                const groupKey = loc.identifier
+                    ? `identifier:${loc.identifier}`
+                    : loc.address
+                        ? `address:${loc.address}`
+                        : `id:${loc._id?.toString() || ''}`;
+
+                if (!locMap[groupKey]) {
+                    locMap[groupKey] = {
+                        _id: loc._id || null,
+                        name: loc.name || null,
+                        lat: loc.lat || null,
+                        lng: loc.lng || null,
+                        address: loc.address || null,
+                        identifier: loc.identifier || null,
+                        total_inflow: 0,
+                        total_outflow: 0,
+                        number_of_transactions: 0,
+                        users: {}
+                    };
+                }
+
+                const entry = locMap[groupKey];
+
+                const userInflow = loc.total_received || 0;
+                const userOutflow = loc.total_spent || 0;
+                const userNum = loc.number_of_transactions || 0;
+
+                entry.total_inflow += userInflow;
+                entry.total_outflow += userOutflow;
+                entry.number_of_transactions += userNum;
+
+                const uid = user._id.toString();
+                if (!entry.users[uid]) {
+                    entry.users[uid] = {
+                        userId: uid,
+                        username: user.username || null,
+                        numbOfTrans: 0,
+                        inflow: 0,
+                        outflow: 0
+                    };
+                }
+
+                entry.users[uid].numbOfTrans += userNum;
+                entry.users[uid].inflow += userInflow;
+                entry.users[uid].outflow += userOutflow;
+            };
+
+            // Iterate users and collect transactions and saved locations
+            for (const userRef of family.users) {
+                const user = await UserModel.findById(userRef._id ? userRef._id : userRef)
                     .populate({
                         path: 'accounts',
                         populate: {
@@ -124,139 +228,53 @@ module.exports = {
                             }
                         }
                     })
-                    .populate({
-                        path: 'locations',
-                    });
+                    .populate('locations');
 
-                // Location stats: use model attributes
-                const locationStats = {};
-                for (const loc of user.locations || []) {
-                    locationStats[loc._id.toString()] = {
-                        _id: loc._id,
-                        name: loc.name,
-                        inflow: loc.total_received || 0,
-                        outflow: loc.total_spent || 0,
-                        number_of_transactions: 0,
-                        lat: loc.lat || null,
-                        lng: loc.lng || null
-                    };
-                }
+                if (!user) continue;
 
-                // Account and transaction stats
-                const accounts = [];
+                // Transactions from accounts/statements
                 for (const acc of user.accounts || []) {
-                    const accStats = {
-                        _id: acc._id,
-                        name: acc.iban,
-                        balance: acc.balance,
-                        transactions: 0,
-                        inflow: 0,
-                        outflow: 0,
-                        locations: {},
-                        statements: []
-                    };
-
                     for (const stmt of acc.statements || []) {
-                        const transactions = stmt.transactions || [];
-                        const stmtStats = {
-                            month: stmt.month,
-                            year: stmt.year,
-                            total_transactions: transactions.length,
-                            inflow: 0,
-                            outflow: 0,
-                            balance: stmt.endBalance,
-                            locations: {},
-                            transactions: []
-                        };
+                        for (const txn of stmt.transactions || []) {
+                            const loc = txn.location;
+                            if (!loc) continue;
 
-                        for (const txn of transactions) {
-                            const location = txn.location;
-                            accStats.transactions += 1;
+                            const inflow = txn.outgoing ? 0 : (txn.change || 0);
+                            const outflow = txn.outgoing ? (txn.change || 0) : 0;
 
-                            // Transaction inflow/outflow
-                            const inflow = txn.outgoing ? 0 : txn.change;
-                            const outflow = txn.outgoing ? txn.change : 0;
-                            accStats.inflow += inflow;
-                            accStats.outflow += outflow;
-                            stmtStats.inflow += inflow;
-                            stmtStats.outflow += outflow;
-
-                            stmtStats.transactions.push({
-                                _id: txn._id,
-                                date: txn.date || txn.datetime || null,
-                                datetime: txn.datetime || txn.date || null,
-                                description: txn.description,
-                                inflow,
-                                outflow,
-                                outgoing: txn.outgoing,
-                                location: location ? {
-                                    _id: location._id,
-                                    name: location.name,
-                                    email: location.email || null
-                                } : null
-                            });
-
-                            // Per-location stats for account/statement
-                            if (location) {
-                                const key = location._id.toString();
-                                if (!accStats.locations[key]) {
-                                    accStats.locations[key] = {
-                                        _id: location._id,
-                                        name: location.name,
-                                        inflow: 0,
-                                        outflow: 0,
-                                        number_of_transactions: 0
-                                    };
-                                }
-                                if (!stmtStats.locations[key]) {
-                                    stmtStats.locations[key] = {
-                                        _id: location._id,
-                                        name: location.name,
-                                        inflow: 0,
-                                        outflow: 0,
-                                        number_of_transactions: 0
-                                    };
-                                }
-                                accStats.locations[key].inflow += inflow;
-                                accStats.locations[key].outflow += outflow;
-                                accStats.locations[key].number_of_transactions += 1;
-                                stmtStats.locations[key].inflow += inflow;
-                                stmtStats.locations[key].outflow += outflow;
-                                stmtStats.locations[key].number_of_transactions += 1;
-
-                                // Count transactions for global location stats
-                                if (locationStats[key]) {
-                                    locationStats[key].number_of_transactions += 1;
-                                }
-                            }
+                            processTxnForLocation(loc, user, inflow, outflow);
                         }
-                        stmtStats.locations = Object.values(stmtStats.locations);
-                        accStats.statements.push(stmtStats);
                     }
-                    accStats.locations = Object.values(accStats.locations);
-                    accounts.push(accStats);
                 }
 
-
-                output.push(
-                    {
-                        _id: user._id,
-                        name: user.name,
-                        surname: user.surname,
-                        username: user.username,
-                        email: user.email,
-                        dateOfBirth: user.dateOfBirth,
-                        avatarUrl: user.avatarUrl,
-                        locations: Object.values(locationStats),
-                        accounts
-                    }
-                );
+                // Also include user's saved locations (aggregate totals) to capture locations without txn or extra totals
+                for (const loc of user.locations || []) {
+                    processSavedLocationForUser(loc, user);
+                }
             }
+
+            // Convert locMap to array and transform users map to array
+            const locations = Object.values(locMap).map(loc => {
+                return {
+                    _id: loc._id,
+                    name: loc.name,
+                    lat: loc.lat,
+                    lng: loc.lng,
+                    address: loc.address,
+                    identifier: loc.identifier,
+                    total_inflow: loc.total_inflow,
+                    total_outflow: loc.total_outflow,
+                    number_of_transactions: loc.number_of_transactions,
+                    users: Object.values(loc.users)
+                };
+            });
 
             return res.json({
                 message: 'Family statistics retrieved successfully',
-                statistics: output
+                familyMembers,
+                statistics: locations
             });
+
         } catch (error) {
             return res.status(500).json({
                 message: 'Error when fetching family statistics.',
@@ -264,6 +282,7 @@ module.exports = {
             });
         }
     }
+
     //
     // /**
     //  * Delete an account
